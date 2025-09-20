@@ -106,6 +106,7 @@ class MainActivity : FragmentActivity() {
 
                         // HOME
                         showHome -> HomeScreen()
+
                     }
                 }
             }
