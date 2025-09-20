@@ -105,7 +105,12 @@ class MainActivity : FragmentActivity() {
                         )
 
                         // HOME
-                        showHome -> HomeScreen()
+                        showHome -> {
+                            val intent = Intent(this@MainActivity, HomeActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+
                     }
                 }
             }
