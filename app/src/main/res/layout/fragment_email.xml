@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="24dp"
+    android:background="@color/black"
+    android:gravity="top|center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:paddingBottom="24dp"
+        android:layout_marginTop="49dp"
+        android:text="RitmoFit"
+        android:textColor="@color/yellow"
+        android:textSize="42sp" />
+
+    <TextView
+        android:id="@+id/titleEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Por favor, ingrese su email"
+        android:textSize="22sp"
+        android:textColor="@color/white"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="24dp"/>
+
+    <com.example.tp0gym.ui.components.CustomTextField
+        android:id="@+id/emailField"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="22dp"
+        android:hint="Email"
+        android:textColor="@android:color/white"
+        android:textColorHint="@android:color/white"
+        android:background="@drawable/rounded_border_dark"
+        android:textSize="18sp"/>
+
+
+    <Button
+        android:id="@+id/nextButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Enviar código"
+        android:backgroundTint="@color/yellow"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded_button"/>
+
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Volver"
+        android:backgroundTint="@color/gray"
+        android:textColor="@color/white"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/rounded_button"/>
+</LinearLayout>
