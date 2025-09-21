@@ -17,13 +17,11 @@ public class CustomTextField extends androidx.appcompat.widget.AppCompatEditText
     }
 
     private void init() {
-        // NO usar setBackgroundColor
         setTextColor(Color.WHITE);
         setHintTextColor(Color.WHITE);
         setPadding(16, 16, 16, 16);
         setSingleLine(true);
 
-        // Cursor blanco
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             setTextCursorDrawable(null);
         }

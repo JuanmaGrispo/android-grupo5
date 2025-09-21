@@ -21,19 +21,24 @@ import androidx.fragment.app.Fragment;
 
 import com.example.tp0gym.MainActivity;
 import com.example.tp0gym.R;
+import com.example.tp0gym.modelo.OTPResponse;
+import com.example.tp0gym.modelo.User;
+import com.example.tp0gym.repository.AuthRepository;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class VerificationFragment extends Fragment {
 
     private EditText otp1, otp2, otp3, otp4, otp5, otp6;
     private Button resendButton;
     private String email;
-    private final String correctCode = "123456";
 
-    public VerificationFragment() {
-        // constructor vacío obligatorio
-    }
+    private final AuthRepository authRepository = new AuthRepository();
 
-    // Método para pasar parámetros al fragment
+    public VerificationFragment() { }
+
     public static VerificationFragment newInstance(String email) {
         VerificationFragment fragment = new VerificationFragment();
         Bundle args = new Bundle();
@@ -64,14 +69,10 @@ public class VerificationFragment extends Fragment {
         otp4 = view.findViewById(R.id.otp4);
         otp5 = view.findViewById(R.id.otp5);
         otp6 = view.findViewById(R.id.otp6);
-
         resendButton = view.findViewById(R.id.resendButton);
 
         setupOtpWatchers();
-
-        resendButton.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Código reenviado a " + censorEmail(email), Toast.LENGTH_SHORT).show()
-        );
+        resendButton.setOnClickListener(v -> resendOtp());
 
         return view;
     }
@@ -90,47 +91,101 @@ public class VerificationFragment extends Fragment {
                         otps[index + 1].requestFocus();
                     }
 
-                    String code = "";
-                    for (EditText otp : otps) code += otp.getText().toString();
+                    StringBuilder codeBuilder = new StringBuilder();
+                    for (EditText otp : otps) codeBuilder.append(otp.getText().toString());
+                    String code = codeBuilder.toString();
 
                     if (code.length() == 6) {
-                        checkCode(code, otps);
+                        verifyLogin(code, otps);
                     }
                 }
             });
         }
     }
 
-    private void checkCode(String code, EditText[] otps) {
-        if (code.equals(correctCode)) {
-            Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
-            ((MainActivity)getActivity()).getNavigationManager().navigateTo("permissions");
-        } else {
-            Toast.makeText(getContext(), "Código incorrecto, inténtalo de nuevo", Toast.LENGTH_SHORT).show();
+    private void verifyLogin(String code, EditText[] otps) {
+        authRepository.verifyLogin(email, code, new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    User user = response.body();
 
-            for (EditText otp : otps) {
-                otp.setBackgroundResource(R.drawable.rounded_border_red);
-                otp.setText("");
-            }
 
-            if (getContext() != null) {
-                Vibrator v = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-                if (v != null) {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        v.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
-                    } else {
-                        v.vibrate(100);
+                    if (getContext() != null) {
+                        getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                                .edit()
+                                .putString("token", user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba")
+                                .putBoolean("hasLoggedInOnce", true)
+                                .apply();
                     }
+
+                    Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
+                    ((MainActivity) getActivity()).getNavigationManager().navigateTo("permissions");
+                } else {
+                    showErrorOtps(otps);
                 }
             }
 
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                for (EditText otp : otps) {
-                    otp.setBackgroundResource(R.drawable.rounded_border_gray);
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                showErrorOtps(otps);
+            }
+        });
+    }
+
+    private void resendOtp() {
+        authRepository.startLogin(email, new Callback<OTPResponse>() {
+            @Override
+            public void onResponse(Call<OTPResponse> call, Response<OTPResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    OTPResponse otpResponse = response.body();
+                    String message = otpResponse.getMessage() != null ? otpResponse.getMessage() : "";
+
+                    if (otpResponse.isSuccess() || message.toLowerCase().contains("otp vigente")) {
+                        Toast.makeText(getContext(),
+                                otpResponse.isSuccess() ? "OTP enviado a " + censorEmail(email)
+                                        : "Ya existe un OTP vigente. Revísalo.",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "No hay una cuenta asignada a este email", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Error al reenviar OTP", Toast.LENGTH_SHORT).show();
                 }
-                otp1.requestFocus();
-            }, 1000);
+            }
+
+            @Override
+            public void onFailure(Call<OTPResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "Error al reenviar OTP: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showErrorOtps(EditText[] otps) {
+        Toast.makeText(getContext(), "Código incorrecto, inténtalo de nuevo", Toast.LENGTH_SHORT).show();
+
+        for (EditText otp : otps) {
+            otp.setBackgroundResource(R.drawable.rounded_border_red);
+            otp.setText("");
         }
+
+        if (getContext() != null) {
+            Vibrator v = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    v.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    v.vibrate(100);
+                }
+            }
+        }
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            for (EditText otp : otps) {
+                otp.setBackgroundResource(R.drawable.rounded_border_gray);
+            }
+            otp1.requestFocus();
+        }, 1000);
     }
 
     private String censorEmail(String email) {

@@ -1,10 +1,9 @@
 <resources>
     <!-- Tema principal AppCompat -->
     <style name="Theme.Tp0Gym" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Colores de acción y fondo opcionales -->
         <item name="colorPrimary">@color/purple_80</item>
         <item name="colorPrimaryDark">@color/purple_700</item>
-        <item name="colorAccent">@color/white</item> <!-- ← cambiamos de amarillo a blanco -->
+        <item name="colorAccent">@color/white</item>
         <item name="android:statusBarColor">@color/purple_700</item>
     </style>
 

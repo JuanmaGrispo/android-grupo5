@@ -16,16 +16,23 @@ import androidx.fragment.app.Fragment;
 
 import com.example.tp0gym.MainActivity;
 import com.example.tp0gym.R;
+import com.example.tp0gym.modelo.OTPResponse;
+import com.example.tp0gym.repository.AuthRepository;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class EmailFragment extends Fragment {
 
     private EditText emailField;
     private Button nextButton, backButton;
+    private final AuthRepository authRepository = new AuthRepository();
 
     private String censorEmail(String email) {
         int at = email.indexOf("@");
-        if(at <= 1) return "*"+email.substring(at);
-        return email.substring(0,1) + "***" + email.substring(at);
+        if (at <= 1) return "*" + email.substring(at);
+        return email.substring(0, 1) + "***" + email.substring(at);
     }
 
     @Nullable
@@ -40,27 +47,50 @@ public class EmailFragment extends Fragment {
         nextButton = view.findViewById(R.id.nextButton);
         backButton = view.findViewById(R.id.backButton);
 
-        // --- FORZAR TEXTO, HINT Y CURSOR BLANCOS ---
         emailField.setTextColor(Color.WHITE);
         emailField.setHintTextColor(Color.WHITE);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             emailField.setTextCursorDrawable(null);
         }
 
         nextButton.setOnClickListener(v -> {
-            String email = emailField.getText().toString();
-            if(email.isEmpty())
-                Toast.makeText(getContext(), "Ingrese un email", Toast.LENGTH_SHORT).show();
-            else if(!email.contains("@"))
-                Toast.makeText(getContext(), "Email inválido", Toast.LENGTH_SHORT).show();
-            else {
-                Toast.makeText(getContext(), "Código enviado a " + censorEmail(email), Toast.LENGTH_SHORT).show();
+            String email = emailField.getText().toString().trim();
 
-                Bundle bundle = new Bundle();
-                bundle.putString("email", email);
-                ((MainActivity)getActivity()).getNavigationManager().navigateTo("verification", bundle);
+            if(email.isEmpty()) {
+                Toast.makeText(getContext(), "Ingrese un email", Toast.LENGTH_SHORT).show();
+                return;
             }
+            if(!email.contains("@")) {
+                Toast.makeText(getContext(), "Email inválido", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            authRepository.startLogin(email, new Callback<OTPResponse>() {
+                @Override
+                public void onResponse(Call<OTPResponse> call, Response<OTPResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        OTPResponse otpResponse = response.body();
+                        String message = otpResponse.getMessage() != null ? otpResponse.getMessage() : "";
+
+                        if (otpResponse.isSuccess() || message.toLowerCase().contains("otp vigente")) {
+                            Toast.makeText(getContext(),
+                                    otpResponse.isSuccess() ? "Código enviado a " + censorEmail(email)
+                                            : "Ya existe un OTP vigente. Revísalo.",
+                                    Toast.LENGTH_SHORT).show();
+                            navegarVerification(email);
+                        } else {
+                            Toast.makeText(getContext(), "No hay una cuenta asignada a ese email", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Error al enviar OTP", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<OTPResponse> call, Throwable t) {
+                    Toast.makeText(getContext(), "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         backButton.setOnClickListener(v ->
@@ -68,5 +98,11 @@ public class EmailFragment extends Fragment {
         );
 
         return view;
+    }
+
+    private void navegarVerification(String email) {
+        Bundle bundle = new Bundle();
+        bundle.putString("email", email);
+        ((MainActivity)getActivity()).getNavigationManager().navigateTo("verification", bundle);
     }
 }

@@ -25,7 +25,6 @@ public class PermissionsFragment extends Fragment {
     private ActivityResultLauncher<String[]> permissionLauncher;
 
     public PermissionsFragment() {
-        // constructor vacío requerido
     }
 
     public void setOnFinished(Runnable onFinished) {
@@ -45,11 +44,10 @@ public class PermissionsFragment extends Fragment {
                 ContextCompat.getColor(requireContext(), R.color.purple_80)
         );
 
-        // Configuramos el launcher
         permissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
-                    // Guardamos que ya se mostró la solicitud de permisos para este dispositivo
+
                     SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
                     prefs.edit().putBoolean("permissionsAsked", true).apply();
 
@@ -57,7 +55,7 @@ public class PermissionsFragment extends Fragment {
                 }
         );
 
-        // Pedimos permisos solo si no se mostraron antes en este dispositivo
+
         requestPermissionsIfNeeded();
 
         return view;

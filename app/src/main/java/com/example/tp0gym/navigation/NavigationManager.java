@@ -19,12 +19,10 @@ public class NavigationManager {
         this.activity = activity;
     }
 
-    // Navegación simple sin datos
     public void navigateTo(String screen) {
         navigateTo(screen, null);
     }
 
-    // Navegación con datos (Bundle)
     public void navigateTo(String screen, Bundle args) {
         Fragment fragment = null;
 
@@ -36,7 +34,7 @@ public class NavigationManager {
                 fragment = new EmailFragment();
                 break;
             case "verification":
-                fragment = new VerificationFragment(); // constructor vacío
+                fragment = new VerificationFragment();
                 break;
             case "home":
                 fragment = new HomeFragment();
@@ -51,7 +49,7 @@ public class NavigationManager {
 
         if (fragment != null) {
             if (args != null) {
-                fragment.setArguments(args); // pasamos los datos por Bundle
+                fragment.setArguments(args);
             }
             activity.getSupportFragmentManager()
                     .beginTransaction()

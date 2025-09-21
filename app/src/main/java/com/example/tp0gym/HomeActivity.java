@@ -16,6 +16,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+
 public class HomeActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ClaseAdapter adapter;
@@ -35,7 +36,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void cargarClases() {
-        RetrofitClient.getApiService().getClases().enqueue(new Callback<List<Clase>>() {
+        RetrofitClient.getClaseApiService().getClases().enqueue(new Callback<List<Clase>>() {
             @Override
             public void onResponse(Call<List<Clase>> call, Response<List<Clase>> response) {
                 if (response.isSuccessful() && response.body() != null) {

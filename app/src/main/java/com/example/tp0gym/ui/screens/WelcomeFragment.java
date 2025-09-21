@@ -1,5 +1,7 @@
 package com.example.tp0gym.ui.screens;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,7 +21,13 @@ import androidx.fragment.app.Fragment;
 
 import com.example.tp0gym.MainActivity;
 import com.example.tp0gym.R;
+import com.example.tp0gym.modelo.User;
+import com.example.tp0gym.repository.AuthRepository;
 import com.example.tp0gym.ui.components.CustomTextField;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class WelcomeFragment extends Fragment {
 
@@ -28,6 +36,7 @@ public class WelcomeFragment extends Fragment {
     private Button loginButton;
     private TextView otpButton;
     private boolean isPasswordVisible = false;
+    private AuthRepository authRepository;
 
     public WelcomeFragment() { }
 
@@ -39,30 +48,27 @@ public class WelcomeFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_welcome, container, false);
 
-        // Referencias
+        authRepository = new AuthRepository();
+
         emailField = view.findViewById(R.id.emailField);
         passwordField = view.findViewById(R.id.passwordField);
         togglePassword = view.findViewById(R.id.togglePassword);
         loginButton = view.findViewById(R.id.loginButton);
         otpButton = view.findViewById(R.id.otpButton);
 
-        // Colores blancos
         emailField.setTextColor(Color.WHITE);
         emailField.setHintTextColor(Color.WHITE);
         passwordField.setTextColor(Color.WHITE);
         passwordField.setHintTextColor(Color.WHITE);
 
-        // Tipo contraseña
         passwordField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         passwordField.setSelection(passwordField.getText().length());
 
-        // Cursor blanco para Android Q+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             emailField.setTextCursorDrawable(null);
             passwordField.setTextCursorDrawable(null);
         }
 
-        // Mostrar / ocultar contraseña
         togglePassword.setOnClickListener(v -> {
             if (isPasswordVisible) {
                 passwordField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -76,12 +82,10 @@ public class WelcomeFragment extends Fragment {
             passwordField.setSelection(passwordField.getText().length());
         });
 
-        // Login
         loginButton.setOnClickListener(v -> {
             String email = emailField.getText().toString().trim();
             String password = passwordField.getText().toString().trim();
 
-            // Validaciones
             if (TextUtils.isEmpty(email) && TextUtils.isEmpty(password)) {
                 Toast.makeText(getContext(), "Por favor complete los campos", Toast.LENGTH_SHORT).show();
                 return;
@@ -99,14 +103,35 @@ public class WelcomeFragment extends Fragment {
                 return;
             }
 
-            Toast.makeText(getContext(), "Login exitoso", Toast.LENGTH_SHORT).show();
-            ((MainActivity)getActivity()).getNavigationManager().navigateTo("permissions");
+            authRepository.login(email, password, new Callback<User>() {
+                @Override
+                public void onResponse(Call<User> call, Response<User> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        User user = response.body();
+                        SharedPreferences prefs = requireContext()
+                                .getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+                        prefs.edit()
+                                .putString("token", user.getAccessToken())
+                                .putBoolean("hasLoggedInOnce", true)
+                                .apply();
+
+                        Toast.makeText(getContext(), "Login exitoso", Toast.LENGTH_SHORT).show();
+                        ((MainActivity)getActivity()).getNavigationManager().navigateTo("home");
+                    } else {
+                        Toast.makeText(getContext(), "Credenciales inválidas", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<User> call, Throwable t) {
+                    Toast.makeText(getContext(), "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
-        // OTP
-        otpButton.setOnClickListener(v -> {
-            ((MainActivity)getActivity()).getNavigationManager().navigateTo("email");
-        });
+        otpButton.setOnClickListener(v ->
+                ((MainActivity)getActivity()).getNavigationManager().navigateTo("email")
+        );
 
         return view;
     }
