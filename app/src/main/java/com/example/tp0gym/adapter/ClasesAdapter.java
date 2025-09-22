@@ -52,4 +52,9 @@ public class ClasesAdapter extends RecyclerView.Adapter<ClasesAdapter.ClaseViewH
             tvLocation = itemView.findViewById(R.id.tvLocation);
         }
     }
+    public void updateData(List<Clase> nuevasClases) {
+        this.clases = nuevasClases;
+        notifyDataSetChanged();
+    }
+
 }

@@ -6,7 +6,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.example.tp0gym.R;
-import com.example.tp0gym.ui.screens.ClassesFragment;
+import com.example.tp0gym.ui.screens.ClasesFragment;
 import com.example.tp0gym.ui.screens.EmailFragment;
 import com.example.tp0gym.ui.screens.HomeFragment;
 import com.example.tp0gym.ui.screens.VerificationFragment;
@@ -38,7 +38,7 @@ public class NavigationManager {
                 fragment = new VerificationFragment();
                 break;
             case "home":
-                fragment = new ClassesFragment();
+                fragment = new ClasesFragment();
                 break;
             case "permissions":
                 PermissionsFragment pf = new PermissionsFragment();
