@@ -1,11 +1,12 @@
 package com.example.tp0gym.ui.screens;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,51 +16,54 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.tp0gym.R;
+import com.example.tp0gym.adapter.ClasesAdapter;
 import com.example.tp0gym.modelo.Clase;
 import com.example.tp0gym.repository.ClasesApi;
-import com.example.tp0gym.adapter.ClasesAdapter;
 import com.example.tp0gym.repository.RetrofitClient;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-public class HomeFragment extends Fragment {
+public class ClassesFragment extends Fragment {
 
     private RecyclerView recyclerView;
+    private ProgressBar progressBar;
     private ClasesAdapter adapter;
-    private List<Clase> listaClases = new ArrayList<>();
+
+    public ClassesFragment() { }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_classes, container, false);
 
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        recyclerView = view.findViewById(R.id.recyclerViewClases);
+        progressBar = view.findViewById(R.id.progressBarClases);
 
-        recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ClasesAdapter(listaClases);
+
+        adapter = new ClasesAdapter(null);
         recyclerView.setAdapter(adapter);
 
-        cargarClases();
+        loadClases();
 
         return view;
     }
 
-    private void cargarClases() {
-        String token = getContext()
-                .getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
-                .getString("TOKEN", null);
+    private void loadClases() {
+        progressBar.setVisibility(View.VISIBLE);
 
-        if (token == null) {
-            Log.e("API_ERROR", "Token no encontrado");
+        SharedPreferences prefs = requireContext().getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE);
+        String token = prefs.getString("TOKEN", null);
+
+        if(token == null) {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "No se encontró token, logueate de nuevo", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -67,20 +71,20 @@ public class HomeFragment extends Fragment {
         api.getClases("Bearer " + token).enqueue(new Callback<List<Clase>>() {
             @Override
             public void onResponse(Call<List<Clase>> call, Response<List<Clase>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    listaClases.clear();
-                    listaClases.addAll(response.body());
-                    adapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                if(response.isSuccessful() && response.body() != null) {
+                    adapter = new ClasesAdapter(response.body());
+                    recyclerView.setAdapter(adapter);
                 } else {
-                    Log.e("API_ERROR", "Error: " + response.code() + " - " + response.message());
+                    Toast.makeText(getContext(), "Error al cargar clases", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<Clase>> call, Throwable t) {
-                Log.e("API_ERROR", "Error cargando clases", t);
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
-
 }

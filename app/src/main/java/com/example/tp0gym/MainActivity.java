@@ -19,27 +19,31 @@ public class MainActivity extends AppCompatActivity {
 
         navigationManager = new NavigationManager(this);
 
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("APP_PREFS", MODE_PRIVATE);
+        String token = prefs.getString("TOKEN", null);
         boolean hasLoggedInOnce = prefs.getBoolean("hasLoggedInOnce", false);
 
-        if (hasLoggedInOnce) {
+        if (token != null && !token.isEmpty() && hasLoggedInOnce) {
+            // Si hay token y el usuario ya inició sesión antes, ir a Home
             BiometricHelper.tryBiometric(
                     this,
                     () -> navigationManager.navigateTo("home"),
                     () -> navigationManager.navigateTo("welcome")
             );
         } else {
-
+            // No hay token o nunca inició sesión, mostrar pantalla de bienvenida/login
             navigationManager.navigateTo("welcome");
         }
     }
 
-
-    public void setUserLoggedIn() {
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        prefs.edit().putBoolean("hasLoggedInOnce", true).apply();
+    // Método para marcar al usuario como logueado
+    public void setUserLoggedIn(String token) {
+        SharedPreferences prefs = getSharedPreferences("APP_PREFS", MODE_PRIVATE);
+        prefs.edit()
+                .putString("TOKEN", token)
+                .putBoolean("hasLoggedInOnce", true)
+                .apply();
     }
-
 
     public NavigationManager getNavigationManager() {
         return navigationManager;

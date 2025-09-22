@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="12dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/white">
+    android:orientation="vertical"
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -14,20 +13,25 @@
         android:layout_height="wrap_content"/>
 
     <TextView
-        android:id="@+id/tvDiscipline"
-        android:textSize="14sp"
+        android:id="@+id/tvDescription"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:maxLines="2"/>
 
     <TextView
         android:id="@+id/tvDuration"
-        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dp"/>
+
+    <TextView
+        android:id="@+id/tvCapacity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
     <TextView
-        android:id="@+id/tvCapacity"
-        android:textSize="14sp"
+        android:id="@+id/tvLocation"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:paddingTop="4dp"/>
 </LinearLayout>
