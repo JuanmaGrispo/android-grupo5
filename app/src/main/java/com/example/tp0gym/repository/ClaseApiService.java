@@ -6,6 +6,6 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 
 public interface ClaseApiService {
-    @GET("api/v1/classes")
+    @GET("classes")
     Call<List<Clase>> getClases();
 }
