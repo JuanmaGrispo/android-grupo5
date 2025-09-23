@@ -110,17 +110,14 @@ public class VerificationFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
 
-
-                    if (getContext() != null) {
-                        getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                                .edit()
-                                .putString("token", user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba")
-                                .putBoolean("hasLoggedInOnce", true)
-                                .apply();
+                    // Guardar token y flag usando MainActivity
+                    if (getActivity() != null) {
+                        ((MainActivity) getActivity()).setUserLoggedIn(user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba");
+                        ((MainActivity) getActivity()).getNavigationManager().navigateTo("home");
                     }
 
                     Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
-                    ((MainActivity) getActivity()).getNavigationManager().navigateTo("permissions");
+
                 } else {
                     showErrorOtps(otps);
                 }
