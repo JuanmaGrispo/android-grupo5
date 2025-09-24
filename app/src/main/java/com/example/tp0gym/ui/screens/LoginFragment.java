@@ -24,12 +24,13 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.modelo.User;
 import com.example.tp0gym.repository.AuthRepository;
 import com.example.tp0gym.ui.components.CustomTextField;
+import com.example.tp0gym.utils.AppPreferences;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class WelcomeFragment extends Fragment {
+public class LoginFragment extends Fragment {
 
     private CustomTextField emailField, passwordField;
     private ImageView togglePassword;
@@ -38,7 +39,7 @@ public class WelcomeFragment extends Fragment {
     private boolean isPasswordVisible = false;
     private AuthRepository authRepository;
 
-    public WelcomeFragment() { }
+    public LoginFragment() { }
 
     @Nullable
     @Override
@@ -108,12 +109,10 @@ public class WelcomeFragment extends Fragment {
                 public void onResponse(Call<User> call, Response<User> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         User user = response.body();
-                        SharedPreferences prefs = requireContext()
-                                .getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-                        prefs.edit()
-                                .putString("token", user.getAccessToken())
-                                .putBoolean("hasLoggedInOnce", true)
-                                .apply();
+                        AppPreferences prefs = new AppPreferences(requireContext());
+                        prefs.setToken(user.getAccessToken());
+                        prefs.setHasLoggedInOnce(true);
+
 
                         Toast.makeText(getContext(), "Login exitoso", Toast.LENGTH_SHORT).show();
                         ((MainActivity)getActivity()).getNavigationManager().navigateTo("home");

@@ -1,10 +1,10 @@
 package com.example.tp0gym.modelo;
 
-public class OTPVerifyRequest {
+public class OtpVerifyRequest {
     private String email;
     private String code;
 
-    public OTPVerifyRequest(String email, String code) {
+    public OtpVerifyRequest(String email, String code) {
         this.email = email;
         this.code = code;
     }

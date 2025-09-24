@@ -23,6 +23,7 @@ import com.example.tp0gym.adapter.ClasesAdapter;
 import com.example.tp0gym.modelo.Clase;
 import com.example.tp0gym.repository.ClasesApi;
 import com.example.tp0gym.repository.RetrofitClient;
+import com.example.tp0gym.utils.AppPreferences;
 
 import java.util.Calendar;
 import java.util.List;
@@ -104,8 +105,9 @@ public class ClasesFragment extends Fragment {
     }
 
     private void cargarClases(String sede, String disciplina, String fecha) {
-        SharedPreferences prefs = getContext().getSharedPreferences("APP_PREFS", getContext().MODE_PRIVATE);
-        String token = prefs.getString("TOKEN", "");
+        AppPreferences prefs = new AppPreferences(requireContext());
+        String token = prefs.getToken();
+
 
         ClasesApi api = RetrofitClient.getClient().create(ClasesApi.class);
         Call<List<Clase>> call = api.getClases("Bearer " + token, sede, disciplina, fecha);

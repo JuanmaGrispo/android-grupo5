@@ -1,9 +1,9 @@
 package com.example.tp0gym.modelo;
 
-public class OTPRequest {
+public class OtpRequest {
     private String email;
 
-    public OTPRequest(String email) { this.email = email; }
+    public OtpRequest(String email) { this.email = email; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }

@@ -1,12 +1,12 @@
 package com.example.tp0gym.modelo;
 
-public class OTPResponse {
+public class OtpResponse {
     private boolean success;
     private String message;
 
-    public OTPResponse() { }
+    public OtpResponse() { }
 
-    public OTPResponse(boolean success, String message) {
+    public OtpResponse(boolean success, String message) {
         this.success = success;
         this.message = message;
     }

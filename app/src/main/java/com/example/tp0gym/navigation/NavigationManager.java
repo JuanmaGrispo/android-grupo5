@@ -7,11 +7,10 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.example.tp0gym.R;
 import com.example.tp0gym.ui.screens.ClasesFragment;
-import com.example.tp0gym.ui.screens.EmailFragment;
-import com.example.tp0gym.ui.screens.HomeFragment;
-import com.example.tp0gym.ui.screens.VerificationFragment;
-import com.example.tp0gym.ui.screens.WelcomeFragment;
+import com.example.tp0gym.ui.screens.EmailLoginFragment;
+import com.example.tp0gym.ui.screens.LoginFragment;
 import com.example.tp0gym.ui.screens.PermissionsFragment;
+import com.example.tp0gym.ui.screens.VerificationCodeFragment;
 
 public class NavigationManager {
     private final FragmentActivity activity;
@@ -29,13 +28,13 @@ public class NavigationManager {
 
         switch (screen) {
             case "welcome":
-                fragment = new WelcomeFragment();
+                fragment = new LoginFragment();
                 break;
             case "email":
-                fragment = new EmailFragment();
+                fragment = new EmailLoginFragment();
                 break;
             case "verification":
-                fragment = new VerificationFragment();
+                fragment = new VerificationCodeFragment();
                 break;
             case "home":
                 fragment = new ClasesFragment();
