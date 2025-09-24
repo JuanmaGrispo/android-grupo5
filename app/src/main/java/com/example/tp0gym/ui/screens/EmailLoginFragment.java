@@ -19,15 +19,21 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.modelo.OtpResponse;
 import com.example.tp0gym.repository.AuthRepository;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class EmailLoginFragment extends Fragment {
 
     private EditText emailField;
     private Button nextButton, backButton;
-    private final AuthRepository authRepository = new AuthRepository();
+
+    @Inject
+    AuthRepository authRepository;
 
     private String censorEmail(String email) {
         int at = email.indexOf("@");

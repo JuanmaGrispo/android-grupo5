@@ -6,14 +6,18 @@ import com.example.tp0gym.modelo.OtpVerifyRequest;
 import com.example.tp0gym.modelo.OtpResponse;
 import com.example.tp0gym.modelo.User;
 
+import javax.inject.Inject;
+
 import retrofit2.Callback;
 
 public class AuthRepository {
 
     private final AuthApiService authService;
 
-    public AuthRepository() {
-        authService = RetrofitClient.getAuthApiService();
+
+    @Inject
+    public AuthRepository(AuthApiService authService) {
+        this.authService = authService;
     }
 
     public void startRegister(String email, Callback<OtpResponse> callback) {

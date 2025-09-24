@@ -26,17 +26,22 @@ import com.example.tp0gym.modelo.User;
 import com.example.tp0gym.repository.AuthRepository;
 import com.example.tp0gym.utils.AppPreferences;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class VerificationCodeFragment extends Fragment {
+
+    @Inject
+    AuthRepository authRepository;
 
     private EditText otp1, otp2, otp3, otp4, otp5, otp6;
     private Button resendButton;
     private String email;
-
-    private final AuthRepository authRepository = new AuthRepository();
 
     public VerificationCodeFragment() { }
 
@@ -111,12 +116,10 @@ public class VerificationCodeFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
 
-
                     if (getContext() != null) {
                         AppPreferences prefs = new AppPreferences(requireContext());
                         prefs.setToken(user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba");
                         prefs.setHasLoggedInOnce(true);
-
                     }
 
                     Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
