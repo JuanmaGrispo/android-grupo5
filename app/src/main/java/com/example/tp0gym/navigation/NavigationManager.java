@@ -11,6 +11,7 @@ import com.example.tp0gym.ui.screens.EmailLoginFragment;
 import com.example.tp0gym.ui.screens.LoginFragment;
 import com.example.tp0gym.ui.screens.PermissionsFragment;
 import com.example.tp0gym.ui.screens.VerificationCodeFragment;
+import com.example.tp0gym.ui.screens.ProfileFragment;
 
 public class NavigationManager {
     private final FragmentActivity activity;
@@ -43,6 +44,9 @@ public class NavigationManager {
                 PermissionsFragment pf = new PermissionsFragment();
                 pf.setOnFinished(() -> navigateTo("home"));
                 fragment = pf;
+                break;
+            case "profile":       // <-- NUEVO
+                fragment = new ProfileFragment();
                 break;
 
         }
