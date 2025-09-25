@@ -29,20 +29,40 @@
     </LinearLayout>
 
     <!-- Selector de fecha -->
-    <Button
-        android:id="@+id/btnFecha"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Seleccionar fecha"
-        android:layout_marginBottom="8dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
 
-    <!-- Botón Filtrar -->
+        <!-- Botón Seleccionar fecha -->
+        <Button
+            android:id="@+id/btnFecha"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Seleccionar fecha"/>
+
+        <!-- Botón Filtrar -->
+        <Button
+            android:id="@+id/btnFiltrar"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Filtrar"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
     <Button
-        android:id="@+id/btnFiltrar"
+        android:id="@+id/btnReservations"
+        android:text="Reservas"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Filtrar"
-        android:layout_marginBottom="8dp"/>
+        android:layout_gravity="end"
+    />
+
+
 
     <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
