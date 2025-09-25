@@ -2,6 +2,7 @@
 package com.example.tp0gym.di;
 
 import com.example.tp0gym.repository.AuthApiService;
+import com.example.tp0gym.repository.api.UserApi;
 import com.example.tp0gym.repository.api.ClasesApi;
 
 import javax.inject.Singleton;
@@ -53,5 +54,10 @@ public class NetworkModule {
     @Provides @Singleton
     public AuthApiService provideAuthApiService(Retrofit retrofit) {
         return retrofit.create(AuthApiService.class); // <-- esto resuelve el MissingBinding
+    }
+
+    @Provides @Singleton
+    public UserApi provideUserApi(Retrofit retrofit) {
+        return retrofit.create(UserApi.class);
     }
 }

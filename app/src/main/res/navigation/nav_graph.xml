@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/splashFragment">
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.tp0gym.ui.screens.SplashFragment"
+        android:label="Splash">
+        <action
+            android:id="@+id/action_splash_to_login"
+            app:destination="@id/loginFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.tp0gym.ui.screens.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/clasesFragment" />
+        <action
+            android:id="@+id/action_login_to_email"
+            app:destination="@id/emailLoginFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/clasesFragment"
+        android:name="com.example.tp0gym.ui.screens.ClasesFragment"
+        android:label="Clases">
+        <action
+            android:id="@+id/action_clases_to_reservations"
+            app:destination="@id/reservationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reservationFragment"
+        android:name="com.example.tp0gym.ui.screens.ReservationFragment"
+        android:label="Mis reservas" />
+
+    <fragment
+        android:id="@+id/emailLoginFragment"
+        android:name="com.example.tp0gym.ui.screens.EmailLoginFragment"
+        android:label="Loguear con email" />
+
+    <fragment
+        android:id="@+id/permissionsFragment"
+        android:name="com.example.tp0gym.ui.screens.PermissionsFragment"
+        android:label="Permisos" />
+
+    <fragment
+        android:id="@+id/verificationCodeFragment"
+        android:name="com.example.tp0gym.ui.screens.VerificationCodeFragment"
+        android:label="Verification code" />
+</navigation>

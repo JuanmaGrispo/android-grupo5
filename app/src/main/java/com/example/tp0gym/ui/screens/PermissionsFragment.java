@@ -20,7 +20,15 @@ import androidx.fragment.app.Fragment;
 import com.example.tp0gym.R;
 import com.example.tp0gym.utils.AppPreferences;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class PermissionsFragment extends Fragment {
+
+    @Inject
+    AppPreferences prefs;
 
     private Runnable onFinished;
     private ActivityResultLauncher<String[]> permissionLauncher;
@@ -49,7 +57,6 @@ public class PermissionsFragment extends Fragment {
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
 
-                    AppPreferences prefs = new AppPreferences(requireContext());
                     prefs.setPermissionsAsked(true);
 
 
@@ -64,7 +71,6 @@ public class PermissionsFragment extends Fragment {
     }
 
     private void requestPermissionsIfNeeded() {
-        AppPreferences prefs = new AppPreferences(requireContext());
         boolean alreadyAsked = prefs.getPermissionsAsked();
 
 
