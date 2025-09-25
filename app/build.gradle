@@ -30,13 +30,9 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 
-    buildFeatures {
-        compose true
-    }
+    buildFeatures { compose true }
 
     composeOptions {
         kotlinCompilerExtensionVersion "1.5.3"
@@ -52,13 +48,14 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation "androidx.biometric:biometric:1.1.0"
     implementation "androidx.fragment:fragment-ktx:1.6.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
 
-    // Compose
+    // Compose (dejá tu BOM si te compila bien)
     implementation platform('androidx.compose:compose-bom:2025.08.00')
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.material3:material3:1.3.0'
@@ -66,10 +63,17 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
-    // Hilt
-    implementation "com.google.dagger:hilt-android:2.52"
-    kapt "com.google.dagger:hilt-compiler:2.52"
+    // Hilt (Kotlin + Hilt ⇒ usar kapt)
+    implementation "com.google.dagger:hilt-android:2.57.1"
+    kapt "com.google.dagger:hilt-android-compiler:2.57.1"
 }
+
+// si lo tenías:
 kapt {
     generateStubs = true
+}
+
+// Workaround si el error persiste en AggregateDeps:
+hilt {
+    enableAggregatingTask = false
 }

@@ -1,4 +1,4 @@
-package com.example.tp0gym.repository;
+package com.example.tp0gym.repository.api;
 
 import com.example.tp0gym.modelo.Clase;
 import java.util.List;
