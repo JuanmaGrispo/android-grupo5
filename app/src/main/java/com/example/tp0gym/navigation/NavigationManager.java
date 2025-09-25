@@ -1,4 +1,6 @@
-package com.example.tp0gym.navigation;
+
+
+/*package com.example.tp0gym.navigation;
 
 import android.os.Bundle;
 
@@ -13,6 +15,8 @@ import com.example.tp0gym.ui.screens.PermissionsFragment;
 import com.example.tp0gym.ui.screens.VerificationCodeFragment;
 import com.example.tp0gym.ui.screens.ProfileFragment;
 
+
+// Clase deprecada
 public class NavigationManager {
     private final FragmentActivity activity;
 
@@ -62,3 +66,5 @@ public class NavigationManager {
         }
     }
 }
+
+ */

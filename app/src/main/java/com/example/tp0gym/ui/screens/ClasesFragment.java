@@ -44,6 +44,7 @@ public class ClasesFragment extends Fragment {
 
     @Inject
     Retrofit retrofit;
+    AppPreferences prefs;
 
     @Nullable
     @Override
@@ -123,7 +124,6 @@ public class ClasesFragment extends Fragment {
     }
 
     private void cargarClases(String sede, String disciplina, String fecha) {
-        AppPreferences prefs = new AppPreferences(requireContext());
         String token = prefs.getToken();
 
         ClasesApi api = retrofit.create(ClasesApi.class);

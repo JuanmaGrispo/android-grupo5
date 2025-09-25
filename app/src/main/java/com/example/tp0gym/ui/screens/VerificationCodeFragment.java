@@ -18,8 +18,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.tp0gym.MainActivity;
 import com.example.tp0gym.R;
 import com.example.tp0gym.modelo.OtpResponse;
 import com.example.tp0gym.modelo.User;
@@ -38,6 +39,9 @@ public class VerificationCodeFragment extends Fragment {
 
     @Inject
     AuthRepository authRepository;
+
+    @Inject
+    AppPreferences prefs;
 
     private EditText otp1, otp2, otp3, otp4, otp5, otp6;
     private Button resendButton;
@@ -63,10 +67,11 @@ public class VerificationCodeFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
         View view = inflater.inflate(R.layout.fragment_verification, container, false);
 
         otp1 = view.findViewById(R.id.otp1);
@@ -113,17 +118,18 @@ public class VerificationCodeFragment extends Fragment {
         authRepository.verifyLogin(email, code, new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful() && response.body() != null && getContext() != null) {
                     User user = response.body();
 
-                    if (getContext() != null) {
-                        AppPreferences prefs = new AppPreferences(requireContext());
-                        prefs.setToken(user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba");
-                        prefs.setHasLoggedInOnce(true);
-                    }
+                    // Guarda token real si viene; sino usa uno dummy para no romper el flujo
+                    prefs.setToken(user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba");
+                    prefs.setHasLoggedInOnce(true);
 
                     Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
-                    ((MainActivity) getActivity()).getNavigationManager().navigateTo("permissions");
+
+                    // 👇 Navegación con Navigation Component
+                    NavController nav = NavHostFragment.findNavController(VerificationCodeFragment.this);
+                    nav.navigate(R.id.permissionsFragment); // ajustá este ID si tu destino tiene otro nombre
                 } else {
                     showErrorOtps(otps);
                 }
@@ -140,32 +146,39 @@ public class VerificationCodeFragment extends Fragment {
         authRepository.startLogin(email, new Callback<OtpResponse>() {
             @Override
             public void onResponse(Call<OtpResponse> call, Response<OtpResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful() && response.body() != null && getContext() != null) {
                     OtpResponse otpResponse = response.body();
                     String message = otpResponse.getMessage() != null ? otpResponse.getMessage() : "";
 
                     if (otpResponse.isSuccess() || message.toLowerCase().contains("otp vigente")) {
-                        Toast.makeText(getContext(),
-                                otpResponse.isSuccess() ? "OTP enviado a " + censorEmail(email)
+                        Toast.makeText(
+                                getContext(),
+                                otpResponse.isSuccess()
+                                        ? "OTP enviado a " + censorEmail(email)
                                         : "Ya existe un OTP vigente. Revísalo.",
-                                Toast.LENGTH_SHORT).show();
+                                Toast.LENGTH_SHORT
+                        ).show();
                     } else {
                         Toast.makeText(getContext(), "No hay una cuenta asignada a este email", Toast.LENGTH_SHORT).show();
                     }
-                } else {
+                } else if (getContext() != null) {
                     Toast.makeText(getContext(), "Error al reenviar OTP", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<OtpResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "Error al reenviar OTP: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Error al reenviar OTP: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
 
     private void showErrorOtps(EditText[] otps) {
-        Toast.makeText(getContext(), "Código incorrecto, inténtalo de nuevo", Toast.LENGTH_SHORT).show();
+        if (getContext() != null) {
+            Toast.makeText(getContext(), "Código incorrecto, inténtalo de nuevo", Toast.LENGTH_SHORT).show();
+        }
 
         for (EditText otp : otps) {
             otp.setBackgroundResource(R.drawable.rounded_border_red);
@@ -201,7 +214,9 @@ public class VerificationCodeFragment extends Fragment {
         if (name.length() <= 2) {
             censoredName = name.charAt(0) + "*";
         } else {
-            censoredName = name.charAt(0) + "*".repeat(name.length() - 2) + name.charAt(name.length() - 1);
+            StringBuilder stars = new StringBuilder();
+            for (int i = 0; i < name.length() - 2; i++) stars.append("*");
+            censoredName = name.charAt(0) + stars.toString() + name.charAt(name.length() - 1);
         }
 
         return censoredName + "@" + domain;

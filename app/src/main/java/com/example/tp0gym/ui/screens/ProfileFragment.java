@@ -19,6 +19,8 @@ import com.example.tp0gym.modelo.User;
 import com.example.tp0gym.repository.UserRepository;
 import com.example.tp0gym.ui.components.CustomTextField;
 
+import javax.inject.Inject;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,8 +29,10 @@ public class ProfileFragment extends Fragment {
 
     private CustomTextField nameField, emailField;
     private Button saveButton, backButton;
-    private UserRepository repo;
     private String token;
+
+    @Inject
+    UserRepository repo;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -46,7 +50,6 @@ public class ProfileFragment extends Fragment {
         backButton = v.findViewById(R.id.backButton);
 
         // Repo y token desde tus SharedPreferences existentes
-        repo = new UserRepository();
         SharedPreferences prefs = requireContext().getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE);
         token = prefs.getString("TOKEN", null);
 

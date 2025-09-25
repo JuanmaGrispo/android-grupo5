@@ -1,8 +1,6 @@
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
     id 'com.google.dagger.hilt.android'
-    id 'kotlin-kapt'
 }
 
 android {
@@ -29,8 +27,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
-    kotlinOptions { jvmTarget = "17" }
 
     buildFeatures { compose true }
 
@@ -63,15 +59,16 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
+    // Navigation
+    implementation "androidx.navigation:navigation-fragment:2.7.7"
+    implementation "androidx.navigation:navigation-ui:2.7.7"
+
     // Hilt (Kotlin + Hilt ⇒ usar kapt)
     implementation "com.google.dagger:hilt-android:2.57.1"
-    kapt "com.google.dagger:hilt-android-compiler:2.57.1"
+    annotationProcessor "com.google.dagger:hilt-android-compiler:2.57.1"
 }
 
-// si lo tenías:
-kapt {
-    generateStubs = true
-}
+
 
 // Workaround si el error persiste en AggregateDeps:
 hilt {
