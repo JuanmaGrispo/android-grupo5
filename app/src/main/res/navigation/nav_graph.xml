@@ -35,6 +35,9 @@
         <action
             android:id="@+id/action_clases_to_reservations"
             app:destination="@id/reservationFragment" />
+        <action
+            android:id="@+id/action_clases_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -65,6 +68,11 @@
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/clasesFragment" />
-</fragment>
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.tp0gym.ui.screens.ProfileFragment"
+        android:label="Perfil" />
 
 </navigation>
