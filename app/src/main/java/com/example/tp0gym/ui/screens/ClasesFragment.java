@@ -44,6 +44,8 @@ public class ClasesFragment extends Fragment {
 
     @Inject
     Retrofit retrofit;
+
+    @Inject
     AppPreferences prefs;
 
     @Nullable

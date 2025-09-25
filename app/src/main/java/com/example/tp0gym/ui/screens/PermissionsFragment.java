@@ -1,8 +1,6 @@
 package com.example.tp0gym.ui.screens;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -16,6 +14,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.tp0gym.R;
 import com.example.tp0gym.utils.AppPreferences;
@@ -27,18 +27,11 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class PermissionsFragment extends Fragment {
 
-    @Inject
-    AppPreferences prefs;
+    @Inject AppPreferences prefs;
 
-    private Runnable onFinished;
     private ActivityResultLauncher<String[]> permissionLauncher;
 
-    public PermissionsFragment() {
-    }
-
-    public void setOnFinished(Runnable onFinished) {
-        this.onFinished = onFinished;
-    }
+    public PermissionsFragment() {}
 
     @Nullable
     @Override
@@ -56,28 +49,23 @@ public class PermissionsFragment extends Fragment {
         permissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
-
+                    // Marcar que ya pedimos permisos (sin importar si aceptó o no)
                     prefs.setPermissionsAsked(true);
-
-
-                    if (onFinished != null) onFinished.run();
+                    goToHome();
                 }
         );
 
-
         requestPermissionsIfNeeded();
-
         return view;
     }
 
     private void requestPermissionsIfNeeded() {
         boolean alreadyAsked = prefs.getPermissionsAsked();
-
-
         if (!alreadyAsked) {
             launchPermissions();
         } else {
-            if (onFinished != null) onFinished.run();
+            // Ya los pedimos alguna vez — seguir con el flujo
+            goToHome();
         }
     }
 
@@ -92,5 +80,13 @@ public class PermissionsFragment extends Fragment {
                     Manifest.permission.CAMERA
             });
         }
+    }
+
+    private void goToHome() {
+        NavController nav = NavHostFragment.findNavController(PermissionsFragment.this);
+        // Si definiste una acción en el nav_graph, usá esa acción.
+        // nav.navigate(R.id.action_permissionsFragment_to_clasesFragment);
+        // Si no tenés acción, navegar directo al destino también funciona:
+        nav.navigate(R.id.clasesFragment);
     }
 }

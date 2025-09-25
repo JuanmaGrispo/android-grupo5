@@ -129,7 +129,7 @@ public class VerificationCodeFragment extends Fragment {
 
                     // 👇 Navegación con Navigation Component
                     NavController nav = NavHostFragment.findNavController(VerificationCodeFragment.this);
-                    nav.navigate(R.id.permissionsFragment); // ajustá este ID si tu destino tiene otro nombre
+                    nav.navigate(R.id.action_login_to_home);
                 } else {
                     showErrorOtps(otps);
                 }
