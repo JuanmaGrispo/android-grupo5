@@ -21,26 +21,32 @@ import androidx.fragment.app.Fragment;
 
 import com.example.tp0gym.MainActivity;
 import com.example.tp0gym.R;
-import com.example.tp0gym.modelo.OTPResponse;
+import com.example.tp0gym.modelo.OtpResponse;
 import com.example.tp0gym.modelo.User;
 import com.example.tp0gym.repository.AuthRepository;
+import com.example.tp0gym.utils.AppPreferences;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class VerificationFragment extends Fragment {
+@AndroidEntryPoint
+public class VerificationCodeFragment extends Fragment {
+
+    @Inject
+    AuthRepository authRepository;
 
     private EditText otp1, otp2, otp3, otp4, otp5, otp6;
     private Button resendButton;
     private String email;
 
-    private final AuthRepository authRepository = new AuthRepository();
+    public VerificationCodeFragment() { }
 
-    public VerificationFragment() { }
-
-    public static VerificationFragment newInstance(String email) {
-        VerificationFragment fragment = new VerificationFragment();
+    public static VerificationCodeFragment newInstance(String email) {
+        VerificationCodeFragment fragment = new VerificationCodeFragment();
         Bundle args = new Bundle();
         args.putString("email", email);
         fragment.setArguments(args);
@@ -110,14 +116,14 @@ public class VerificationFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
 
-                    // Guardar token y flag usando MainActivity
-                    if (getActivity() != null) {
-                        ((MainActivity) getActivity()).setUserLoggedIn(user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba");
-                        ((MainActivity) getActivity()).getNavigationManager().navigateTo("home");
+                    if (getContext() != null) {
+                        AppPreferences prefs = new AppPreferences(requireContext());
+                        prefs.setToken(user.getAccessToken() != null ? user.getAccessToken() : "token_de_prueba");
+                        prefs.setHasLoggedInOnce(true);
                     }
 
                     Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
-
+                    ((MainActivity) getActivity()).getNavigationManager().navigateTo("permissions");
                 } else {
                     showErrorOtps(otps);
                 }
@@ -131,11 +137,11 @@ public class VerificationFragment extends Fragment {
     }
 
     private void resendOtp() {
-        authRepository.startLogin(email, new Callback<OTPResponse>() {
+        authRepository.startLogin(email, new Callback<OtpResponse>() {
             @Override
-            public void onResponse(Call<OTPResponse> call, Response<OTPResponse> response) {
+            public void onResponse(Call<OtpResponse> call, Response<OtpResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    OTPResponse otpResponse = response.body();
+                    OtpResponse otpResponse = response.body();
                     String message = otpResponse.getMessage() != null ? otpResponse.getMessage() : "";
 
                     if (otpResponse.isSuccess() || message.toLowerCase().contains("otp vigente")) {
@@ -152,7 +158,7 @@ public class VerificationFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<OTPResponse> call, Throwable t) {
+            public void onFailure(Call<OtpResponse> call, Throwable t) {
                 Toast.makeText(getContext(), "Error al reenviar OTP: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

@@ -1,14 +1,12 @@
 package com.example.tp0gym.ui.screens;
 
 import android.app.DatePickerDialog;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -22,15 +20,20 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.adapter.ClasesAdapter;
 import com.example.tp0gym.modelo.Clase;
 import com.example.tp0gym.repository.ClasesApi;
-import com.example.tp0gym.repository.RetrofitClient;
+import com.example.tp0gym.utils.AppPreferences;
 
 import java.util.Calendar;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
+@AndroidEntryPoint
 public class ClasesFragment extends Fragment {
 
     private RecyclerView rvClases;
@@ -38,6 +41,9 @@ public class ClasesFragment extends Fragment {
     private Spinner spinnerSede, spinnerDisciplina;
     private Button btnFecha;
     private String fechaSeleccionada = null;
+
+    @Inject
+    Retrofit retrofit;
 
     @Nullable
     @Override
@@ -61,7 +67,6 @@ public class ClasesFragment extends Fragment {
     }
 
     private void setupSpinners() {
-        // Ejemplo de valores, podés reemplazar por dinámicos si querés
         ArrayAdapter<String> sedeAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item,
                 new String[]{"Todas", "Sede A", "Sede B"});
@@ -104,10 +109,10 @@ public class ClasesFragment extends Fragment {
     }
 
     private void cargarClases(String sede, String disciplina, String fecha) {
-        SharedPreferences prefs = getContext().getSharedPreferences("APP_PREFS", getContext().MODE_PRIVATE);
-        String token = prefs.getString("TOKEN", "");
+        AppPreferences prefs = new AppPreferences(requireContext());
+        String token = prefs.getToken();
 
-        ClasesApi api = RetrofitClient.getClient().create(ClasesApi.class);
+        ClasesApi api = retrofit.create(ClasesApi.class);
         Call<List<Clase>> call = api.getClases("Bearer " + token, sede, disciplina, fecha);
         call.enqueue(new Callback<List<Clase>>() {
             @Override

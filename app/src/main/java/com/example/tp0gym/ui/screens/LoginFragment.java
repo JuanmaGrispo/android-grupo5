@@ -1,11 +1,8 @@
 package com.example.tp0gym.ui.screens;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.InputType;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,21 +21,28 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.modelo.User;
 import com.example.tp0gym.repository.AuthRepository;
 import com.example.tp0gym.ui.components.CustomTextField;
+import com.example.tp0gym.utils.AppPreferences;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class WelcomeFragment extends Fragment {
+@AndroidEntryPoint
+public class LoginFragment extends Fragment {
+
+    @Inject
+    AuthRepository authRepository;
 
     private CustomTextField emailField, passwordField;
     private ImageView togglePassword;
     private Button loginButton;
     private TextView otpButton;
     private boolean isPasswordVisible = false;
-    private AuthRepository authRepository;
 
-    public WelcomeFragment() { }
+    public LoginFragment() { }
 
     @Nullable
     @Override
@@ -47,8 +51,6 @@ public class WelcomeFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_welcome, container, false);
-
-        authRepository = new AuthRepository();
 
         emailField = view.findViewById(R.id.emailField);
         passwordField = view.findViewById(R.id.passwordField);
@@ -61,7 +63,7 @@ public class WelcomeFragment extends Fragment {
         passwordField.setTextColor(Color.WHITE);
         passwordField.setHintTextColor(Color.WHITE);
 
-        passwordField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordField.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
         passwordField.setSelection(passwordField.getText().length());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -71,11 +73,11 @@ public class WelcomeFragment extends Fragment {
 
         togglePassword.setOnClickListener(v -> {
             if (isPasswordVisible) {
-                passwordField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                passwordField.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 togglePassword.setImageResource(R.drawable.ic_eye_off);
                 isPasswordVisible = false;
             } else {
-                passwordField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                passwordField.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
                 togglePassword.setImageResource(R.drawable.ic_eye);
                 isPasswordVisible = true;
             }
@@ -108,12 +110,9 @@ public class WelcomeFragment extends Fragment {
                 public void onResponse(Call<User> call, Response<User> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         User user = response.body();
-                        SharedPreferences prefs = requireContext()
-                                .getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-                        prefs.edit()
-                                .putString("token", user.getAccessToken())
-                                .putBoolean("hasLoggedInOnce", true)
-                                .apply();
+                        AppPreferences prefs = new AppPreferences(requireContext());
+                        prefs.setToken(user.getAccessToken());
+                        prefs.setHasLoggedInOnce(true);
 
                         Toast.makeText(getContext(), "Login exitoso", Toast.LENGTH_SHORT).show();
                         ((MainActivity)getActivity()).getNavigationManager().navigateTo("home");

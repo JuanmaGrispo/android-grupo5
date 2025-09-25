@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.tp0gym.R;
+import com.example.tp0gym.utils.AppPreferences;
 
 public class PermissionsFragment extends Fragment {
 
@@ -48,8 +49,9 @@ public class PermissionsFragment extends Fragment {
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
 
-                    SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-                    prefs.edit().putBoolean("permissionsAsked", true).apply();
+                    AppPreferences prefs = new AppPreferences(requireContext());
+                    prefs.setPermissionsAsked(true);
+
 
                     if (onFinished != null) onFinished.run();
                 }
@@ -62,8 +64,9 @@ public class PermissionsFragment extends Fragment {
     }
 
     private void requestPermissionsIfNeeded() {
-        SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-        boolean alreadyAsked = prefs.getBoolean("permissionsAsked", false);
+        AppPreferences prefs = new AppPreferences(requireContext());
+        boolean alreadyAsked = prefs.getPermissionsAsked();
+
 
         if (!alreadyAsked) {
             launchPermissions();

@@ -8,6 +8,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.tp0gym.utils.BiometricHelper;
 import com.example.tp0gym.navigation.NavigationManager;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
 
     private NavigationManager navigationManager;
@@ -24,19 +27,16 @@ public class MainActivity extends AppCompatActivity {
         boolean hasLoggedInOnce = prefs.getBoolean("hasLoggedInOnce", false);
 
         if (token != null && !token.isEmpty() && hasLoggedInOnce) {
-            // Si hay token y el usuario ya inició sesión antes, ir a Home
             BiometricHelper.tryBiometric(
                     this,
                     () -> navigationManager.navigateTo("home"),
                     () -> navigationManager.navigateTo("welcome")
             );
         } else {
-            // No hay token o nunca inició sesión, mostrar pantalla de bienvenida/login
             navigationManager.navigateTo("welcome");
         }
     }
 
-    // Método para marcar al usuario como logueado
     public void setUserLoggedIn(String token) {
         SharedPreferences prefs = getSharedPreferences("APP_PREFS", MODE_PRIVATE);
         prefs.edit()
