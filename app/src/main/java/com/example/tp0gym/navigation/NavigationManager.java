@@ -9,6 +9,7 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.ui.screens.ClasesFragment;
 import com.example.tp0gym.ui.screens.EmailFragment;
 import com.example.tp0gym.ui.screens.HomeFragment;
+import com.example.tp0gym.ui.screens.ProfileFragment;
 import com.example.tp0gym.ui.screens.VerificationFragment;
 import com.example.tp0gym.ui.screens.WelcomeFragment;
 import com.example.tp0gym.ui.screens.PermissionsFragment;
@@ -44,6 +45,9 @@ public class NavigationManager {
                 PermissionsFragment pf = new PermissionsFragment();
                 pf.setOnFinished(() -> navigateTo("home"));
                 fragment = pf;
+                break;
+            case "profile":       // <-- NUEVO
+                fragment = new ProfileFragment();
                 break;
 
         }
