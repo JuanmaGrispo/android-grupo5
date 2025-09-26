@@ -71,6 +71,10 @@
         android:id="@+id/profileFragment"
         android:name="com.example.tp0gym.ui.screens.ProfileFragment"
         android:label="Profile" />
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.example.tp0gym.ui.screens.HistoryFragment"
+        android:label="History" />
 
 
 </navigation>

@@ -1,8 +1,6 @@
-// ui/screens/HistoryFragment.java
 package com.example.tp0gym.ui.screens;
 
 import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -72,7 +70,7 @@ public class HistoryFragment extends Fragment {
     }
 
     // ============================
-    // Carga desde backend + fallbacks
+    // Backend (sin mocks)
     // ============================
     private void loadHistory() {
         final String token = appPrefs.getToken();
@@ -95,52 +93,86 @@ public class HistoryFragment extends Fragment {
                     Toast.makeText(requireContext(), "Sesión expirada. Iniciá sesión de nuevo.", Toast.LENGTH_SHORT).show();
                     NavHostFragment.findNavController(HistoryFragment.this).navigate(R.id.loginFragment);
                 } else {
-                    Toast.makeText(requireContext(), "No se pudo cargar el historial (" + resp.code() + ")", Toast.LENGTH_SHORT).show();
-                    renderFromMock();
+                    renderError("No se pudo cargar el historial (" + resp.code() + ")");
                 }
             }
 
             @Override public void onFailure(@NonNull Call<List<AttendanceDto>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                renderFromMock();
+                renderError("Fallo de red: " + t.getMessage());
             }
         });
     }
 
     private void showLoading() {
         cardsContainer.removeAllViews();
-        TextView tv = new TextView(requireContext());
-        tv.setText("Cargando historial...");
-        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
-        tv.setPadding(dp(8), dp(16), dp(8), dp(16));
+        TextView tv = makeInfoText("Cargando historial...");
         cardsContainer.addView(tv);
     }
 
+    private void renderError(String msg) {
+        cardsContainer.removeAllViews();
+        cardsContainer.addView(makeInfoText(msg));
+    }
+
+    private void renderEmpty() {
+        cardsContainer.removeAllViews();
+        cardsContainer.addView(makeInfoText("Sin historial por ahora."));
+    }
+
+    private TextView makeInfoText(String text) {
+        TextView tv = new TextView(requireContext());
+        tv.setText(text);
+        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+        tv.setAlpha(0.9f);
+        tv.setPadding(dp(8), dp(16), dp(8), dp(16));
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        return tv;
+    }
+
     private void renderFromDto(List<AttendanceDto> list) {
+        // Mapear DTO -> items UI
         List<UiItem> items = new ArrayList<>();
         for (AttendanceDto dto : list) {
             AttendanceDto.SessionDto s = dto.getSession();
-            String title   = (s != null && s.getClassRef() != null) ? safe(s.getClassRef().getTitle()) : "Clase";
-            String dateUi  = (s != null) ? DateFmt.toUi(s.getStartAt()) : "";
-            String teacher = (s != null && s.getClassRef() != null) ? safe(s.getClassRef().getInstructorName()) : "";
-            String discipline = (s != null && s.getClassRef() != null) ? safe(s.getClassRef().getDiscipline()) : "";
+            if (s == null) continue;
+            String title   = s.getClassRef() != null && s.getClassRef().getTitle() != null
+                    ? s.getClassRef().getTitle() : "Clase";
+            String dateUi  = DateFmt.toUi(s.getStartAt());
+            String teacher = (s.getClassRef() != null) ? nullToEmpty(s.getClassRef().getInstructorName()) : "";
+            String discipline = (s.getClassRef() != null) ? nullToEmpty(s.getClassRef().getDiscipline()) : "";
 
-            // Este endpoint devuelve ATTENDANCE (o sea, asistencias efectivas)
+            // Este endpoint representa asistencias efectivas -> siempre "Asistida"
             boolean attended = true;
 
-            items.add(new UiItem(pickEmoji(title, discipline), title, buildSubtitle(dateUi, teacher), teacher, attended));
+            items.add(new UiItem(pickEmoji(title, discipline),
+                    title,
+                    buildSubtitle(dateUi, teacher),
+                    attended));
         }
-        renderCards(items);
+
+        if (items.isEmpty()) {
+            renderEmpty();
+        } else {
+            renderCards(items);
+        }
     }
 
-    private void renderFromMock() {
-        List<UiItem> items = new ArrayList<>();
-        items.add(new UiItem("💪","Funcional Training","12/09 - 18:00 hs • Profesor: Juan Pérez","Juan Pérez", true));
-        items.add(new UiItem("🧘","Yoga","15/09 - 10:00 hs • Profesora: Ana Gómez","Ana Gómez", false));
-        items.add(new UiItem("🏋️","Crossfit","20/09 - 19:00 hs • Profesor: Carlos Ruiz","Carlos Ruiz", true));
-        items.add(new UiItem("🥊","Boxeo","22/09 - 19:30 hs • Profesora: María Díaz","María Díaz", true));
-        renderCards(items);
+    private String buildSubtitle(String dateUi, String teacher) {
+        if (teacher == null || teacher.isEmpty()) return dateUi;
+        return dateUi + " • Profesor: " + teacher;
+    }
+
+    private String pickEmoji(String title, String discipline) {
+        String t = title == null ? "" : title.toLowerCase();
+        String d = discipline == null ? "" : discipline.toLowerCase();
+        String src = t + " " + d;
+        if (src.contains("yoga")) return "🧘";
+        if (src.contains("cross")) return "🏋️";
+        if (src.contains("box"))  return "🥊";
+        if (src.contains("spin") || src.contains("bike")) return "🚴";
+        if (src.contains("funcion")) return "💪";
+        return "💪";
     }
 
     private void renderCards(List<UiItem> data) {
@@ -152,54 +184,22 @@ public class HistoryFragment extends Fragment {
 
         cardsContainer.removeAllViews();
 
-        if (data.isEmpty()) {
-            TextView tv = new TextView(requireContext());
-            tv.setText("No hay registros todavía.");
-            tv.setTextColor(cWhite);
-            tv.setPadding(dp(8), dp(16), dp(8), dp(16));
-            cardsContainer.addView(tv);
-            return;
-        }
-
         for (UiItem it : data) {
             View card = buildCard(it, cWhite, cYellow, cGray, cCardBg, cStroke);
             cardsContainer.addView(card);
         }
     }
 
-    // ============================
-    // UI item + helpers
-    // ============================
+    // ===== UI item =====
     static class UiItem {
-        final String emoji, title, subtitle, teacher;
+        final String emoji, title, subtitle;
         final boolean attended;
-        UiItem(String e, String t, String s, String te, boolean a) {
-            emoji=e; title=t; subtitle=s; teacher=te; attended=a;
+        UiItem(String e, String t, String s, boolean a) {
+            emoji=e; title=t; subtitle=s; attended=a;
         }
     }
 
-    private String buildSubtitle(String dateUi, @Nullable String teacher) {
-        if (teacher == null || teacher.isEmpty()) return dateUi;
-        return dateUi + " • Profesor: " + teacher;
-    }
-
-    private String pickEmoji(String title, String discipline) {
-        String t = (title == null ? "" : title).toLowerCase();
-        String d = (discipline == null ? "" : discipline).toLowerCase();
-        String src = t + " " + d;
-        if (src.contains("yoga")) return "🧘";
-        if (src.contains("cross")) return "🏋️";
-        if (src.contains("box"))  return "🥊";
-        if (src.contains("spin") || src.contains("bike")) return "🚴";
-        if (src.contains("funcion")) return "💪";
-        return "💪";
-    }
-
-    private String safe(String s) { return s == null ? "" : s; }
-
-    // ============================
-    // Card (CardView + pill TextView)
-    // ============================
+    // ===== Card (CardView + pill TextView) =====
     private View buildCard(UiItem it,
                            @ColorInt int cWhite,
                            @ColorInt int cYellow,
@@ -272,9 +272,7 @@ public class HistoryFragment extends Fragment {
         return card;
     }
 
-    // ============================
-    // Utils
-    // ============================
+    // ===== Utils =====
     private int dp(int v) {
         return (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, v,
@@ -301,4 +299,6 @@ public class HistoryFragment extends Fragment {
         if (strokeDp > 0) d.setStroke(strokeDp, strokeColor);
         return d;
     }
+
+    private String nullToEmpty(String s) { return s == null ? "" : s; }
 }
