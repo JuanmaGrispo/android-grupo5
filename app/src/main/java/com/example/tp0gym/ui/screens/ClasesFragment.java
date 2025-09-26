@@ -85,7 +85,7 @@ public class ClasesFragment extends Fragment {
 
         ArrayAdapter<String> disciplinaAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item,
-                new String[]{"Todas", "Yoga", "Pilates", "Crossfit"});
+                new String[]{"Todas", "Funcional", "Yoga", "Crossfit"});
         disciplinaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerDisciplina.setAdapter(disciplinaAdapter);
     }
