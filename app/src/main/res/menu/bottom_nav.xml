@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/clasesFragment"
+        android:icon="@drawable/ic_home"
+    android:title="Clases" />
+
+    <item
+        android:id="@+id/reservationFragment"
+        android:icon="@drawable/ic_reservation"
+        android:title="Reservas" />
+
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_profile"
+        android:title="Perfil" />
+</menu>

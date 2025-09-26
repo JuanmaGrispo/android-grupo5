@@ -28,4 +28,5 @@ public class AppModule {
     public AppPreferences provideAppPreferences(SharedPreferences prefs) {
         return new AppPreferences(prefs);
     }
+
 }

@@ -13,7 +13,6 @@
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/clasesFragment" />
-
     </fragment>
 
     <fragment
@@ -48,18 +47,16 @@
     <fragment
         android:id="@+id/emailLoginFragment"
         android:name="com.example.tp0gym.ui.screens.EmailLoginFragment"
-        android:label="Loguear con email" >
+        android:label="Loguear con email">
         <action
             android:id="@+id/email_login_to_verificationCodeFragment"
             app:destination="@id/verificationCodeFragment" />
     </fragment>
 
-
     <fragment
         android:id="@+id/permissionsFragment"
         android:name="com.example.tp0gym.ui.screens.PermissionsFragment"
         android:label="Permisos" />
-
 
     <fragment
         android:id="@+id/verificationCodeFragment"
@@ -67,16 +64,13 @@
         android:label="Verification code">
         <action
             android:id="@+id/action_login_to_home"
-            app:destination="@id/historyFragment" />
+            app:destination="@id/clasesFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.tp0gym.ui.screens.ProfileFragment"
-        android:label="Perfil" />
-    <fragment
-        android:id="@+id/historyFragment"
-        android:name="com.example.tp0gym.ui.screens.HistoryFragment"
-        android:label="Historial de Clases" />
+        android:label="Profile" />
+
 
 </navigation>
