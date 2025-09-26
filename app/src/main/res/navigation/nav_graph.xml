@@ -34,6 +34,9 @@
         <action
             android:id="@+id/action_clases_to_reservations"
             app:destination="@id/reservationFragment" />
+        <action
+            android:id="@+id/action_clases_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -64,10 +67,10 @@
             app:destination="@id/clasesFragment" />
     </fragment>
 
-    <!-- 👇 Ahora profileFragment está al mismo nivel, no anidado -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.tp0gym.ui.screens.ProfileFragment"
         android:label="Profile" />
+
 
 </navigation>
