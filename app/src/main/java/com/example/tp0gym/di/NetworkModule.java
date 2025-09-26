@@ -2,6 +2,7 @@
 package com.example.tp0gym.di;
 
 import com.example.tp0gym.repository.AuthApiService;
+import com.example.tp0gym.repository.api.ReservationsApi;
 import com.example.tp0gym.repository.api.UserApi;
 import com.example.tp0gym.repository.api.ClasesApi;
 
@@ -59,5 +60,10 @@ public class NetworkModule {
     @Provides @Singleton
     public UserApi provideUserApi(Retrofit retrofit) {
         return retrofit.create(UserApi.class);
+    }
+
+    @Provides @Singleton
+    public ReservationsApi provideReservationApi(Retrofit retrofit) {
+        return retrofit.create(ReservationsApi.class);
     }
 }

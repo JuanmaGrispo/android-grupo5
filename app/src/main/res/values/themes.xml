@@ -1,6 +1,6 @@
 <resources>
     <!-- Tema principal AppCompat -->
-    <style name="Theme.Tp0Gym" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.Tp0Gym" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/purple_80</item>
         <item name="colorPrimaryDark">@color/purple_700</item>
         <item name="colorAccent">@color/white</item>

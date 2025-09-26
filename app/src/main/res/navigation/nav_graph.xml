@@ -13,7 +13,6 @@
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/clasesFragment" />
-
     </fragment>
 
     <fragment
@@ -45,18 +44,16 @@
     <fragment
         android:id="@+id/emailLoginFragment"
         android:name="com.example.tp0gym.ui.screens.EmailLoginFragment"
-        android:label="Loguear con email" >
+        android:label="Loguear con email">
         <action
             android:id="@+id/email_login_to_verificationCodeFragment"
             app:destination="@id/verificationCodeFragment" />
     </fragment>
 
-
     <fragment
         android:id="@+id/permissionsFragment"
         android:name="com.example.tp0gym.ui.screens.PermissionsFragment"
         android:label="Permisos" />
-
 
     <fragment
         android:id="@+id/verificationCodeFragment"
@@ -65,6 +62,12 @@
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/clasesFragment" />
-</fragment>
+    </fragment>
+
+    <!-- 👇 Ahora profileFragment está al mismo nivel, no anidado -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.tp0gym.ui.screens.ProfileFragment"
+        android:label="Profile" />
 
 </navigation>
