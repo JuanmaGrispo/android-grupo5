@@ -12,10 +12,17 @@ public interface SessionsApi {
     @GET("classes/sessions")
     Call<SessionsResponse> getSessions(
             @Header("Authorization") String token,
+            @Query("page") int page,
+            @Query("pageSize") int pageSize
+    );
+    
+    @GET("classes/sessions")
+    Call<SessionsResponse> getSessionsWithFilters(
+            @Header("Authorization") String token,
             @Query("from") String from,
             @Query("to") String to,
-            @Query("location") String location,
-            @Query("discipline") String discipline,
+            @Query("branchId") String branchId,
+            @Query("classRefId") String classRefId,
             @Query("page") int page,
             @Query("pageSize") int pageSize
     );

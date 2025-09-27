@@ -47,6 +47,7 @@ public class SplashFragment extends Fragment {
 
     private void decideDestination() {
         String token = prefs.getToken();
+
         NavController nav = NavHostFragment.findNavController(this);
 
         if (isTokenValid(token) && prefs.hasLoggedInOnce()) {
