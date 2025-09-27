@@ -134,13 +134,17 @@ public class HistoryFragment extends Fragment {
             String dateUi  = DateFmt.toUi(s.getStartAt());
             String teacher = (s.getClassRef() != null) ? nullToEmpty(s.getClassRef().getInstructorName()) : "";
             String discipline = (s.getClassRef() != null) ? nullToEmpty(s.getClassRef().getDiscipline()) : "";
+            String locationName = (s.getClassRef() != null) ? nullToEmpty(s.getClassRef().getLocationName()) : "";
+            int durationMin = s.getDurationMin();
 
             // Este endpoint representa asistencias efectivas -> siempre "Asistida"
             boolean attended = true;
 
-            items.add(new UiItem(pickEmoji(title, discipline),
+            items.add(new UiItem(
                     title,
-                    buildSubtitle(dateUi, teacher),
+                    buildSubtitle(dateUi, teacher, locationName, durationMin),
+                    locationName,
+                    durationMin,
                     attended));
         }
 
@@ -151,22 +155,17 @@ public class HistoryFragment extends Fragment {
         }
     }
 
-    private String buildSubtitle(String dateUi, String teacher) {
-        if (teacher == null || teacher.isEmpty()) return dateUi;
-        return dateUi + " • Profesor: " + teacher;
+    private String buildSubtitle(String dateUi, String teacher, String locationName, int durationMin) {
+        StringBuilder subtitle = new StringBuilder(dateUi);
+        
+        if (durationMin > 0) {
+            subtitle.append(" • ").append(durationMin).append(" min");
+        }
+        
+        return subtitle.toString();
     }
 
-    private String pickEmoji(String title, String discipline) {
-        String t = title == null ? "" : title.toLowerCase();
-        String d = discipline == null ? "" : discipline.toLowerCase();
-        String src = t + " " + d;
-        if (src.contains("yoga")) return "🧘";
-        if (src.contains("cross")) return "🏋️";
-        if (src.contains("box"))  return "🥊";
-        if (src.contains("spin") || src.contains("bike")) return "🚴";
-        if (src.contains("funcion")) return "💪";
-        return "💪";
-    }
+
 
     private void renderCards(List<UiItem> data) {
         @ColorInt int cWhite  = ContextCompat.getColor(requireContext(), R.color.white);
@@ -185,10 +184,11 @@ public class HistoryFragment extends Fragment {
 
     // ===== UI item =====
     static class UiItem {
-        final String emoji, title, subtitle;
+        final String title, subtitle, locationName;
+        final int durationMin;
         final boolean attended;
-        UiItem(String e, String t, String s, boolean a) {
-            emoji=e; title=t; subtitle=s; attended=a;
+        UiItem(String t, String s, String l, int d, boolean a) {
+             title=t; subtitle=s; locationName=l; durationMin=d; attended=a;
         }
     }
 
@@ -216,19 +216,10 @@ public class HistoryFragment extends Fragment {
         row.setBackground(makeRect(cCardBg, dp(16), cStroke, 1));
         card.addView(row);
 
-        TextView tvEmoji = new TextView(requireContext());
-        LinearLayout.LayoutParams lpEmoji = new LinearLayout.LayoutParams(dp(40), dp(40));
-        tvEmoji.setLayoutParams(lpEmoji);
-        tvEmoji.setGravity(Gravity.CENTER);
-        tvEmoji.setText(it.emoji);
-        tvEmoji.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-        tvEmoji.setTextColor(cWhite);
-        row.addView(tvEmoji);
-
         LinearLayout col = new LinearLayout(requireContext());
         col.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams lpCol = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        lpCol.setMarginStart(dp(10)); lpCol.setMarginEnd(dp(10));
+        lpCol.setMarginStart(dp(0)); lpCol.setMarginEnd(dp(10));
         col.setLayoutParams(lpCol);
         row.addView(col);
 
@@ -245,6 +236,28 @@ public class HistoryFragment extends Fragment {
         tvSubtitle.setAlpha(0.8f);
         tvSubtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         col.addView(tvSubtitle);
+
+        // Add location name if available
+        if (it.locationName != null && !it.locationName.isEmpty()) {
+            TextView tvLocation = new TextView(requireContext());
+            tvLocation.setText(it.locationName);
+            tvLocation.setTextColor(cWhite);
+            tvLocation.setAlpha(0.7f);
+            tvLocation.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            tvLocation.setPadding(0, dp(2), 0, 0);
+            col.addView(tvLocation);
+        }
+
+        // Add duration if available
+        if (it.durationMin > 0) {
+            TextView tvDuration = new TextView(requireContext());
+            tvDuration.setText(it.durationMin + " min");
+            tvDuration.setTextColor(cWhite);
+            tvDuration.setAlpha(0.7f);
+            tvDuration.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            tvDuration.setPadding(0, dp(2), 0, 0);
+            col.addView(tvDuration);
+        }
 
         TextView pill = new TextView(requireContext());
         pill.setText(it.attended ? "Asistida" : "Ausente");
