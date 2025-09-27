@@ -47,7 +47,7 @@ public class SplashFragment extends Fragment {
 
     private void decideDestination() {
         String token = prefs.getToken();
-        //String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OWE5ZjBlNC0yZWFhLTQ0YzktODJkNC01OTVjMmNkNGNhZmIiLCJlbWFpbCI6Im1hdGljYWxsZXNAZ21haWwuY29tIiwiaWF0IjoxNzU4OTc0MDYzLCJleHAiOjE3NTk1Nzg4NjN9.SEiotZyBfIQ9zZYCSHNekBti3mmCYiMFAp7CkN8O_Ok";
+
         NavController nav = NavHostFragment.findNavController(this);
 
         if (isTokenValid(token) && prefs.hasLoggedInOnce()) {

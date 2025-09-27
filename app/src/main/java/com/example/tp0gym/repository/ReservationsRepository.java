@@ -2,6 +2,7 @@
 package com.example.tp0gym.repository;
 
 import com.example.tp0gym.repository.api.ReservationsApi;
+import com.example.tp0gym.repository.dto.CreateReservationBody;
 import com.example.tp0gym.repository.dto.ReservationDto;
 import com.example.tp0gym.utils.AppPreferences;
 
@@ -33,5 +34,11 @@ public class ReservationsRepository {
     public Call<ReservationDto> cancelMyReservation(String sessionId) {
         String bearer = "Bearer " + prefs.getToken();
         return api.cancelMyReservation(bearer, sessionId);
+    }
+
+    /** Crea una reserva para la sesión indicada. */
+    public Call<ReservationDto> createReservation(String sessionId) {
+        String bearer = "Bearer " + prefs.getToken();
+        return api.createReservation(bearer, new CreateReservationBody(sessionId));
     }
 }
