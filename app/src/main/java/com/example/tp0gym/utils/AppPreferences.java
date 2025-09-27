@@ -4,6 +4,9 @@ package com.example.tp0gym.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 public class AppPreferences {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_HAS_LOGGED_IN_ONCE = "hasLoggedInOnce";

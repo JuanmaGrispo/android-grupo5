@@ -1,4 +1,4 @@
-// com/example/tp0gym/ui/screens/SplashFragment.java
+//com/example/tp0gym/ui/screens/SplashFragment.java
 package com.example.tp0gym.ui.screens;
 
 import android.os.Bundle;
@@ -17,6 +17,7 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.utils.AppPreferences;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -52,7 +53,7 @@ public class SplashFragment extends Fragment {
                 .setPopUpTo(R.id.splashFragment, true)
                 .build();
 
-        if (isTokenValid(token)) {
+        if (isTokenValid("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NGVmZjJmNS1hYjljLTQ4ZjMtODdjZi0yZWZmZTQyZDgwMWEiLCJlbWFpbCI6ImJhbHRhLm1hcmVuZGFAZ21haWwuY29tIiwiaWF0IjoxNzU4OTQxMDU5LCJleHAiOjE3NTk1NDU4NTl9.01fHWLl0ZVOsRvGSd8CecjT_pMLkEBh5omaeuAw4RNA")) {
             // Ir a Home y sacar el splash del back stack
             nav.navigate(R.id.action_login_to_home, null, clearBackStackToSplash);
         } else {

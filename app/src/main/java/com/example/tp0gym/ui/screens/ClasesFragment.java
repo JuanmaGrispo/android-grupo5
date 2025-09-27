@@ -19,11 +19,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.tp0gym.R;
 import com.example.tp0gym.adapter.ClasesAdapter;
 import com.example.tp0gym.modelo.Clase;
+import com.example.tp0gym.modelo.Branch;
 import com.example.tp0gym.repository.api.ClasesApi;
 import com.example.tp0gym.utils.AppPreferences;
+import com.example.tp0gym.repository.api.BranchesApi;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -77,18 +82,70 @@ public class ClasesFragment extends Fragment {
     }
 
     private void setupSpinners() {
-        ArrayAdapter<String> sedeAdapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item,
-                new String[]{"Todas", "Sede A", "Sede B"});
-        sedeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerSede.setAdapter(sedeAdapter);
+        String token = prefs.getToken(); // si tenés auth
 
-        ArrayAdapter<String> disciplinaAdapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item,
-                new String[]{"Todas", "Funcional", "Yoga", "Crossfit"});
-        disciplinaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerDisciplina.setAdapter(disciplinaAdapter);
+        // ----- Branches -----
+        BranchesApi branchesApi = retrofit.create(BranchesApi.class);
+        Call<List<Branch>> callBranches = branchesApi.getBranches("Bearer " + token);
+        callBranches.enqueue(new Callback<List<Branch>>() {
+            @Override
+            public void onResponse(Call<List<Branch>> call, Response<List<Branch>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<String> branchNames = new ArrayList<>();
+                    branchNames.add("Todas"); // opción por defecto
+                    for (Branch b : response.body()) {
+                        branchNames.add(b.getName());
+                    }
+
+                    ArrayAdapter<String> sedeAdapter = new ArrayAdapter<>(
+                            requireContext(),
+                            android.R.layout.simple_spinner_item,
+                            branchNames
+                    );
+                    sedeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerSede.setAdapter(sedeAdapter);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Branch>> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
+
+        // ----- Disciplines (from Classes) -----
+        ClasesApi classesApi = retrofit.create(ClasesApi.class);
+        // Usamos el método que NO tiene filtros
+        Call<List<Clase>> callClasses = classesApi.getClases("Bearer " + token);
+        callClasses.enqueue(new Callback<List<Clase>>() {
+            @Override
+            public void onResponse(Call<List<Clase>> call, Response<List<Clase>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Set<String> disciplines = new LinkedHashSet<>(); // evita duplicados y mantiene orden
+                    disciplines.add("Todas");
+                    for (Clase c : response.body()) {
+                        if (c.getDiscipline() != null && !c.getDiscipline().trim().isEmpty()) {
+                            disciplines.add(c.getDiscipline());
+                        }
+                    }
+
+                    ArrayAdapter<String> disciplinaAdapter = new ArrayAdapter<>(
+                            requireContext(),
+                            android.R.layout.simple_spinner_item,
+                            new ArrayList<>(disciplines)
+                    );
+                    disciplinaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerDisciplina.setAdapter(disciplinaAdapter);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Clase>> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
+
 
     private void setupDatePicker() {
         btnFecha.setOnClickListener(v -> {
