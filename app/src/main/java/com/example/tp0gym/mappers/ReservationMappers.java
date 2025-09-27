@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/tp0gym/mappers/ReservationMappers.java
 package com.example.tp0gym.mappers;
 
 import com.example.tp0gym.repository.dto.ReservationDto;
@@ -52,6 +53,10 @@ public final class ReservationMappers {
     }
 
     public static ReservationUiModel toUi(ReservationDto dto) {
+        // IDs
+        String reservationId = dto.id;
+        String sessionId = (dto.session != null) ? dto.session.id : null;
+
         // Fecha legible
         String formattedDate = "-";
         if (dto.session != null && dto.session.startAt != null) {
@@ -63,21 +68,57 @@ public final class ReservationMappers {
             }
         }
 
-        // Subtítulo: cupos (si existen)
-        String subtitle = "";
-        if (dto.session != null && dto.session.capacity != null && dto.session.reservedCount != null) {
-            subtitle = "Cupo: " + dto.session.reservedCount + "/" + dto.session.capacity;
+        // Título: priorizamos nombre de la clase; si no hay, disciplina; si no, "Reserva"
+        String title = "Reserva";
+        String discipline = "";
+        if (dto.session != null && dto.session.classRef != null) {
+            String classTitle = dto.session.classRef.title;
+            discipline = safe(dto.session.classRef.discipline);
+            if (classTitle != null && !classTitle.isEmpty()) {
+                title = classTitle;
+            } else if (!discipline.isEmpty()) {
+                title = discipline;
+            }
         }
 
-        // Status traducido
+        // Sede / lugar
+        String place = "";
+        if (dto.session != null) {
+            if (dto.session.branch != null && dto.session.branch.name != null) {
+                place = dto.session.branch.name;
+            } else if (dto.session.classRef != null) {
+                place = safe(dto.session.classRef.locationName);
+            }
+        }
+
+        // Cupo X/Y
+        String cupo = "";
+        if (dto.session != null && dto.session.capacity != null && dto.session.reservedCount != null) {
+            cupo = "Cupo " + dto.session.reservedCount + "/" + dto.session.capacity;
+        }
+
+        // Subtítulo: “<Disciplina o Clase> · <Sede> · <Cupo>”
+        String disciplineOrTitle = !discipline.isEmpty()
+                ? discipline
+                : (dto.session != null && dto.session.classRef != null ? safe(dto.session.classRef.title) : "");
+        StringBuilder subtitleBuilder = new StringBuilder();
+        if (!disciplineOrTitle.isEmpty()) subtitleBuilder.append(disciplineOrTitle);
+        if (!place.isEmpty()) {
+            if (subtitleBuilder.length() > 0) subtitleBuilder.append(" · ");
+            subtitleBuilder.append(place);
+        }
+        if (!cupo.isEmpty()) {
+            if (subtitleBuilder.length() > 0) subtitleBuilder.append(" · ");
+            subtitleBuilder.append(cupo);
+        }
+        String subtitle = subtitleBuilder.length() == 0 ? "" : subtitleBuilder.toString();
+
+        // Estado (de la reserva)
         String status = resolveStatusForUi(dto.status);
 
-        // Título: por ahora usamos el id de la sesión o “Reserva”
-        String title = (dto.session != null && dto.session.id != null)
-                ? "Sesión " + dto.session.id
-                : "Reserva";
-
         return new ReservationUiModel(
+                reservationId,
+                sessionId,
                 title,
                 subtitle,
                 formattedDate,
