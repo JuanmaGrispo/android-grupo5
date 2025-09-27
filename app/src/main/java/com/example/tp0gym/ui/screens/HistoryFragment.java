@@ -1,5 +1,6 @@
 package com.example.tp0gym.ui.screens;
 
+import android.app.DatePickerDialog;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -7,6 +8,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,7 +27,11 @@ import com.example.tp0gym.repository.AttendanceRepository;
 import com.example.tp0gym.utils.AppPreferences;
 import com.example.tp0gym.utils.DateFmt;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -39,6 +45,15 @@ import retrofit2.Response;
 public class HistoryFragment extends Fragment {
 
     private LinearLayout cardsContainer;
+    private TextView tvStartDate, tvEndDate;
+    private Button btnApplyFilter, btnClearFilter;
+    private LinearLayout filterInfoContainer;
+    private TextView tvFilterInfo, tvDateRange;
+
+    // Datos y filtros
+    private List<AttendanceDto> allAttendanceData = new ArrayList<>();
+    private LocalDate startDate, endDate;
+    private boolean isFilterActive = false;
 
     @Inject AttendanceRepository repo;
     @Inject AppPreferences appPrefs;
@@ -57,9 +72,66 @@ public class HistoryFragment extends Fragment {
     public void onViewCreated(@NonNull View root, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(root, savedInstanceState);
 
+        // Inicializar vistas
         cardsContainer = root.findViewById(R.id.cardsContainer);
+        tvStartDate = root.findViewById(R.id.tvStartDate);
+        tvEndDate = root.findViewById(R.id.tvEndDate);
+        btnApplyFilter = root.findViewById(R.id.btnApplyFilter);
+        btnClearFilter = root.findViewById(R.id.btnClearFilter);
+        filterInfoContainer = root.findViewById(R.id.filterInfoContainer);
+        tvFilterInfo = root.findViewById(R.id.tvFilterInfo);
+        tvDateRange = root.findViewById(R.id.tvDateRange);
+
+        // Configurar listeners
+        setupDateSelectors();
+        setupButtons();
 
         loadHistory();
+    }
+
+    // ============================
+    // Configuración de UI
+    // ============================
+    private void setupDateSelectors() {
+        tvStartDate.setOnClickListener(v -> showDatePicker(true));
+        tvEndDate.setOnClickListener(v -> showDatePicker(false));
+    }
+
+    private void setupButtons() {
+        btnApplyFilter.setOnClickListener(v -> applyDateFilter());
+        btnClearFilter.setOnClickListener(v -> clearDateFilter());
+    }
+
+    private void showDatePicker(boolean isStartDate) {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    LocalDate selectedDate = LocalDate.of(selectedYear, selectedMonth + 1, selectedDay);
+                    String formattedDate = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    
+                    if (isStartDate) {
+                        startDate = selectedDate;
+                        tvStartDate.setText(formattedDate);
+                    } else {
+                        endDate = selectedDate;
+                        tvEndDate.setText(formattedDate);
+                    }
+                    
+                    updateApplyButtonState();
+                }, year, month, day);
+
+        // No permitir fechas futuras
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        datePickerDialog.show();
+    }
+
+    private void updateApplyButtonState() {
+        boolean canApply = startDate != null && endDate != null && !startDate.isAfter(endDate);
+        btnApplyFilter.setEnabled(canApply);
     }
 
     // ============================
@@ -124,9 +196,21 @@ public class HistoryFragment extends Fragment {
     }
 
     private void renderFromDto(List<AttendanceDto> list) {
+        // Almacenar todos los datos para filtrado
+        allAttendanceData = new ArrayList<>(list);
+        
+        // Aplicar filtro si está activo
+        List<AttendanceDto> dataToRender = isFilterActive ? 
+            filterByDateRange(allAttendanceData, startDate, endDate) : 
+            allAttendanceData;
+            
+        renderData(dataToRender);
+    }
+
+    private void renderData(List<AttendanceDto> data) {
         // Mapear DTO -> items UI
         List<UiItem> items = new ArrayList<>();
-        for (AttendanceDto dto : list) {
+        for (AttendanceDto dto : data) {
             AttendanceDto.SessionDto s = dto.getSession();
             if (s == null) continue;
             String title   = s.getClassRef() != null && s.getClassRef().getTitle() != null
@@ -152,6 +236,7 @@ public class HistoryFragment extends Fragment {
             renderEmpty();
         } else {
             renderCards(items);
+            updateFilterInfo(data.size());
         }
     }
 
@@ -165,7 +250,67 @@ public class HistoryFragment extends Fragment {
         return subtitle.toString();
     }
 
+    // ============================
+    // Filtrado por fechas
+    // ============================
+    private void applyDateFilter() {
+        if (startDate == null || endDate == null) return;
+        
+        isFilterActive = true;
+        List<AttendanceDto> filteredData = filterByDateRange(allAttendanceData, startDate, endDate);
+        renderData(filteredData);
+        
+        // Mostrar información del filtro
+        filterInfoContainer.setVisibility(View.VISIBLE);
+        String dateRangeText = startDate.format(DateTimeFormatter.ofPattern("dd MMM")) + " - " + 
+                              endDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
+        tvDateRange.setText(dateRangeText);
+    }
 
+    private void clearDateFilter() {
+        isFilterActive = false;
+        startDate = null;
+        endDate = null;
+        
+        // Resetear UI
+        tvStartDate.setText("Seleccionar fecha");
+        tvEndDate.setText("Seleccionar fecha");
+        btnApplyFilter.setEnabled(false);
+        filterInfoContainer.setVisibility(View.GONE);
+        
+        // Mostrar todos los datos
+        renderData(allAttendanceData);
+    }
+
+    private List<AttendanceDto> filterByDateRange(List<AttendanceDto> data, LocalDate start, LocalDate end) {
+        List<AttendanceDto> filtered = new ArrayList<>();
+        
+        for (AttendanceDto dto : data) {
+            if (dto.getSession() == null || dto.getSession().getStartAt() == null) continue;
+            
+            LocalDate sessionDate = parseDate(dto.getSession().getStartAt());
+            if (sessionDate != null && !sessionDate.isBefore(start) && !sessionDate.isAfter(end)) {
+                filtered.add(dto);
+            }
+        }
+        
+        return filtered;
+    }
+
+    private LocalDate parseDate(String dateString) {
+        try {
+            // Formato esperado: "2025-09-27T11:30:00.000Z"
+            return LocalDate.parse(dateString.substring(0, 10));
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    private void updateFilterInfo(int count) {
+        if (isFilterActive) {
+            tvFilterInfo.setText("Mostrando: " + count + " actividades");
+        }
+    }
 
     private void renderCards(List<UiItem> data) {
         @ColorInt int cWhite  = ContextCompat.getColor(requireContext(), R.color.white);
