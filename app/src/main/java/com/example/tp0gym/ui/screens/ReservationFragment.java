@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/tp0gym/ui/screens/ReservationFragment.java
 package com.example.tp0gym.ui.screens;
 
 import android.os.Bundle;
@@ -51,7 +50,39 @@ public class ReservationFragment extends Fragment {
         adapter = new ReservationAdapter();
         rvReservations.setAdapter(adapter);
 
-        // Primera carga (sin filtros)
+        adapter.setOnCancelClickListener(res -> {
+            adapter.setLoading(res.getReservationId(), true);
+
+            reservationsRepository.cancelMyReservation(res.getSessionId())
+                    .enqueue(new Callback<ReservationDto>() {
+                        @Override
+                        public void onResponse(Call<ReservationDto> call, Response<ReservationDto> resp) {
+                            if (!isAdded()) return;
+
+                            if (resp.isSuccessful()) {
+                                adapter.updateStatus(res.getReservationId(), "Cancelada");
+
+
+                                Toast.makeText(getContext(), "Reserva cancelada", Toast.LENGTH_SHORT).show();
+                            } else {
+                                adapter.setLoading(res.getReservationId(), false);
+                                Toast.makeText(getContext(),
+                                        "No se pudo cancelar (" + resp.code() + ")",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ReservationDto> call, Throwable t) {
+                            if (!isAdded()) return;
+                            adapter.setLoading(res.getReservationId(), false);
+                            Toast.makeText(getContext(),
+                                    "Error de red: " + t.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
         loadReservations(null);
 
         return view;
@@ -66,7 +97,7 @@ public class ReservationFragment extends Fragment {
                 if (resp.isSuccessful() && resp.body() != null) {
                     List<ReservationUiModel> uiList = new ArrayList<>();
                     for (ReservationDto dto : resp.body()) {
-                        uiList.add(ReservationMappers.toUi(dto)); // 👈 directo dto → UI
+                        uiList.add(ReservationMappers.toUi(dto));
                     }
                     adapter.setItems(uiList);
                 } else {

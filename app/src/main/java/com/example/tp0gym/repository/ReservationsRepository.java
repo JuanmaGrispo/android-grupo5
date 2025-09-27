@@ -7,6 +7,7 @@ import com.example.tp0gym.utils.AppPreferences;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -24,18 +25,13 @@ public class ReservationsRepository {
         this.prefs = prefs;
     }
 
-    private String bearer() {
-        String t = prefs.getToken();
-        return (t == null || t.isEmpty()) ? "" : "Bearer " + t;
+    public Call<List<ReservationDto>> fetchMyReservations(@Nullable String status) {
+        String bearer = "Bearer " + prefs.getToken();
+        return api.getMyReservations(bearer, status);
     }
 
-    /** Trae las reservas del usuario autenticado. */
-    public Call<List<ReservationDto>> fetchMyReservations(String status) {
-        return api.getMyReservations(bearer());
+    public Call<ReservationDto> cancelMyReservation(String sessionId) {
+        String bearer = "Bearer " + prefs.getToken();
+        return api.cancelMyReservation(bearer, sessionId);
     }
-
-    // Si luego tu backend agrega filtros por estado, podrías ampliar el API y el repo así:
-    // public Call<List<ReservationDto>> fetchMyReservations(@Nullable String status) {
-    //     return api.getMyReservations(bearer(), status);
-    // }
 }
