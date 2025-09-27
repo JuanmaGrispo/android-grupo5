@@ -10,10 +10,9 @@
         <action
             android:id="@+id/action_splash_to_login"
             app:destination="@id/loginFragment" />
-        <!-- si ya está logueado -> va a permisos (biometría) -->
         <action
-            android:id="@+id/action_splash_to_permissions"
-            app:destination="@id/permissionsFragment" />
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/clasesFragment" />
     </fragment>
 
     <fragment
@@ -32,10 +31,6 @@
         android:id="@+id/clasesFragment"
         android:name="com.example.tp0gym.ui.screens.ClasesFragment"
         android:label="Clases">
-        <!-- desde clases podemos forzar mostrar permisos en el primer login -->
-        <action
-            android:id="@+id/action_clases_to_permissions"
-            app:destination="@id/permissionsFragment" />
         <action
             android:id="@+id/action_clases_to_reservations"
             app:destination="@id/reservationFragment" />
@@ -61,14 +56,7 @@
     <fragment
         android:id="@+id/permissionsFragment"
         android:name="com.example.tp0gym.ui.screens.PermissionsFragment"
-        android:label="Permisos">
-        <!-- después de permisos siempre voy a clases -->
-        <action
-            android:id="@+id/action_permissions_to_home"
-            app:destination="@id/clasesFragment"
-            app:popUpTo="@id/permissionsFragment"
-            app:popUpToInclusive="true"/>
-    </fragment>
+        android:label="Permisos" />
 
     <fragment
         android:id="@+id/verificationCodeFragment"
@@ -79,9 +67,14 @@
             app:destination="@id/clasesFragment" />
     </fragment>
 
-
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.tp0gym.ui.screens.ProfileFragment"
         android:label="Profile" />
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.example.tp0gym.ui.screens.HistoryFragment"
+        android:label="History" />
+
+
 </navigation>
