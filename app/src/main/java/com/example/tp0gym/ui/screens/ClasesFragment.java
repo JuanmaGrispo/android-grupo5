@@ -226,7 +226,8 @@ public class ClasesFragment extends Fragment {
         }
 
         SessionsApi api = retrofit.create(SessionsApi.class);
-        Call<SessionsResponse> call = api.getSessions("Bearer " + token, null, null, null, null, 1, 100);
+        // Sin filtros, solo paginación
+        Call<SessionsResponse> call = api.getSessions("Bearer " + token, 1, 100);
         call.enqueue(new Callback<SessionsResponse>() {
             @Override
             public void onResponse(Call<SessionsResponse> call, Response<SessionsResponse> response) {
@@ -280,18 +281,24 @@ public class ClasesFragment extends Fragment {
         loadSessionsWithFilters(selectedBranch, selectedDiscipline, startDate, endDate);
     }
 
-    private void loadSessionsWithFilters(String branch, String discipline, LocalDate from, LocalDate to) {
+    private void loadSessionsWithFilters(String branchName, String discipline, LocalDate from, LocalDate to) {
         String token = prefs.getToken();
         if (token == null || token.isEmpty()) {
             Toast.makeText(getContext(), "Token no disponible", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String fromStr = from.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String toStr = to.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        // Formato correcto según documentación: YYYY-MM-DD
+        String fromStr = from.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // 2025-09-27
+        String toStr = to.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // 2025-09-30
+
+        // Buscar branchId por nombre
+        String branchId = findBranchIdByName(branchName);
+        // Buscar classRefId por disciplina
+        String classRefId = findClassRefIdByDiscipline(discipline);
 
         SessionsApi api = retrofit.create(SessionsApi.class);
-        Call<SessionsResponse> call = api.getSessions("Bearer " + token, fromStr, toStr, branch, discipline, 1, 100);
+        Call<SessionsResponse> call = api.getSessionsWithFilters("Bearer " + token, fromStr, toStr, branchId, classRefId, 1, 100);
         call.enqueue(new Callback<SessionsResponse>() {
             @Override
             public void onResponse(Call<SessionsResponse> call, Response<SessionsResponse> response) {
@@ -332,6 +339,28 @@ public class ClasesFragment extends Fragment {
         
         // Cargar todas las sesiones
         loadSessions();
+    }
+
+    private String findBranchIdByName(String branchName) {
+        if (branchName == null) return null;
+        
+        for (BranchDto branch : allBranches) {
+            if (branch.getName() != null && branch.getName().equals(branchName)) {
+                return branch.getId();
+            }
+        }
+        return null;
+    }
+
+    private String findClassRefIdByDiscipline(String discipline) {
+        if (discipline == null) return null;
+        
+        for (Clase clase : allClasses) {
+            if (clase.getDiscipline() != null && clase.getDiscipline().equals(discipline)) {
+                return clase.getId();
+            }
+        }
+        return null;
     }
 
     private void loadClasses() {
