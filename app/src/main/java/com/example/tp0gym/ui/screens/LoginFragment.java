@@ -106,7 +106,7 @@ public class LoginFragment extends Fragment {
                         // Guardamos token y flags
                         prefs.setToken(user.getAccessToken());
                         prefs.setHasLoggedInOnce(true);
-                        prefs.setPermissionsAsked(true); // 👈 importante
+                        //prefs.setPermissionsAsked(true); // 👈 importante
 
                         Toast.makeText(getContext(), "Login exitoso", Toast.LENGTH_SHORT).show();
 
