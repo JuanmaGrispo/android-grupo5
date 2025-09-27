@@ -114,7 +114,7 @@ public class ClasesFragment extends Fragment {
         rvClases.setAdapter(clasesAdapter);
 
         // Click "Reservar" por item
-        clasesAdapter.setOnReserveClickListener(this::onReserveClicked);
+        clasesAdapter.setOnReserveClickListener(this::onReserve);
 
         // Date pickers + botones
         setupDateSelectors();
@@ -252,14 +252,14 @@ public class ClasesFragment extends Fragment {
         if (isTokenMissing(token)) return;
 
         SessionsApi api = retrofit.create(SessionsApi.class);
-
         // Sin filtros, solo paginación
         Call<SessionsResponse> call = api.getSessions("Bearer " + token, 1, 100);
         call.enqueue(new Callback<SessionsResponse>() {
             @Override
             public void onResponse(Call<SessionsResponse> call, Response<SessionsResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    allSessions = response.body().getItems();
+                    allSessions.clear();
+                    allSessions.addAll(response.body().getItems());
                     // Convertir sesiones a clases para el adapter
                     List<Clase> clasesFromSessions = convertSessionsToClases(allSessions);
                     clasesAdapter.updateData(clasesFromSessions);
@@ -268,6 +268,12 @@ public class ClasesFragment extends Fragment {
                 }
             }
 
+            @Override
+            public void onFailure(Call<SessionsResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     private void loadSessionsWithFilters(@Nullable String branchId, @Nullable String discipline, @NonNull LocalDate from, @NonNull LocalDate to) {
         String token = prefs.getToken();
@@ -277,7 +283,7 @@ public class ClasesFragment extends Fragment {
         String toStr   = to.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
         SessionsApi api = retrofit.create(SessionsApi.class);
-        api.getSessions("Bearer " + token, fromStr, toStr, branchId, discipline, 1, 200)
+        api.getSessionsWithFilters("Bearer " + token, fromStr, toStr, branchId, discipline, 1, 200)
                 .enqueue(new Callback<SessionsResponse>() {
                     @Override public void onResponse(Call<SessionsResponse> call, Response<SessionsResponse> resp) {
                         if (!isAdded()) return;
@@ -331,45 +337,19 @@ public class ClasesFragment extends Fragment {
 
     // ====================== Clases ======================
 
-        String selectedBranch = getSelectedValue(spinnerSede);
-        String selectedDiscipline = getSelectedValue(spinnerDisciplina);
-
-        // Llamar API de sesiones con filtros
-        loadSessionsWithFilters(selectedBranch, selectedDiscipline, startDate, endDate);
-    }
-
-    private void loadSessionsWithFilters(String branchName, String discipline, LocalDate from, LocalDate to) {
-
+    private void loadClasses() {
         String token = prefs.getToken();
         if (isTokenMissing(token)) return;
 
-        // Formato correcto según documentación: YYYY-MM-DD
-        String fromStr = from.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // 2025-09-27
-        String toStr = to.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // 2025-09-30
-
-        // Buscar branchId por nombre
-        String branchId = findBranchIdByName(branchName);
-        // Buscar classRefId por disciplina
-        String classRefId = findClassRefIdByDiscipline(discipline);
-
-        SessionsApi api = retrofit.create(SessionsApi.class);
-        Call<SessionsResponse> call = api.getSessionsWithFilters("Bearer " + token, fromStr, toStr, branchId, classRefId, 1, 100);
-        call.enqueue(new Callback<SessionsResponse>() {
-            @Override
-            public void onResponse(Call<SessionsResponse> call, Response<SessionsResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    allSessions = response.body().getItems();
-                    List<Clase> clasesFromSessions = convertSessionsToClases(allSessions);
-                    clasesAdapter.updateData(clasesFromSessions);
-                    
-                    // Mostrar información del filtro
-                    isFilterActive = true;
-                    filterInfoContainer.setVisibility(View.VISIBLE);
-                    tvFilterInfo.setText("Mostrando: " + allSessions.size() + " sesiones");
-                    String dateRangeText = from.format(DateTimeFormatter.ofPattern("dd MMM")) + " - " + 
-                                          to.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
-                    tvDateRange.setText(dateRangeText);
-
+        ClasesApi api = retrofit.create(ClasesApi.class);
+        api.getClases("Bearer " + token, null, null, null).enqueue(new Callback<List<Clase>>() {
+            @Override public void onResponse(Call<List<Clase>> call, Response<List<Clase>> resp) {
+                if (!isAdded()) return;
+                if (resp.isSuccessful() && resp.body() != null) {
+                    allClasses.clear();
+                    allClasses.addAll(resp.body());
+                    extractDisciplines();
+                    populateDisciplineSpinner();
                 } else {
                     toast("Error al cargar clases");
                 }
@@ -409,7 +389,7 @@ public class ClasesFragment extends Fragment {
 
     private void applyFilters() {
         if (startDate == null || endDate == null) {
-            // si no hay fechas aún, no forzamos error; simplemente no filtramos
+            toast("Selecciona un rango de fechas");
             return;
         }
         String branchId = resolveBranchIdFromSpinner();         // ahora pasamos ID, no nombre
@@ -428,36 +408,23 @@ public class ClasesFragment extends Fragment {
         loadSessions();
     }
 
-    private String findBranchIdByName(String branchName) {
-        if (branchName == null) return null;
-        
-        for (BranchDto branch : allBranches) {
-            if (branch.getName() != null && branch.getName().equals(branchName)) {
-                return branch.getId();
-            }
-        }
-        return null;
-    }
+    // ====================== Reservas ======================
 
-    private String findClassRefIdByDiscipline(String discipline) {
-        if (discipline == null) return null;
-        
-        for (Clase clase : allClasses) {
-            if (clase.getDiscipline() != null && clase.getDiscipline().equals(discipline)) {
-                return clase.getId();
-            }
-        }
-        return null;
-    }
-
-    private void loadClasses() {
-        String token = prefs.getToken();
-        if (token == null || token.isEmpty()) {
-            Toast.makeText(getContext(), "Token no disponible", Toast.LENGTH_SHORT).show();
-
+    private void onReserve(Clase clase) {
+        if (clase == null) {
+            toast("Error: clase no disponible");
             return;
         }
-        createReservation(chosen.getId());
+
+        // Buscar la primera sesión disponible para esta clase
+        SessionDto session = pickFirstAvailableSessionForClass(clase.getId());
+        if (session == null) {
+            toast("No hay sesiones disponibles para esta clase");
+            return;
+        }
+
+        // Crear la reserva
+        createReservation(session.getId());
     }
 
     /** Selecciona la primera sesión SCHEDULED no vencida; si no hay, la más próxima igual. */
