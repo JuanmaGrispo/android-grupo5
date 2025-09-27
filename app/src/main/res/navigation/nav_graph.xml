@@ -13,6 +13,7 @@
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/clasesFragment" />
+
     </fragment>
 
     <fragment
@@ -31,6 +32,10 @@
         android:id="@+id/clasesFragment"
         android:name="com.example.tp0gym.ui.screens.ClasesFragment"
         android:label="Clases">
+        <!-- desde clases podemos forzar mostrar permisos en el primer login -->
+        <action
+            android:id="@+id/action_clases_to_permissions"
+            app:destination="@id/permissionsFragment" />
         <action
             android:id="@+id/action_clases_to_reservations"
             app:destination="@id/reservationFragment" />
