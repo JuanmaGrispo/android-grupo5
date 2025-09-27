@@ -1,4 +1,4 @@
-// com/example/tp0gym/ui/screens/SplashFragment.java
+// SplashFragment.java
 package com.example.tp0gym.ui.screens;
 
 import android.os.Bundle;
@@ -11,10 +11,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.NavOptions;
 
 import com.example.tp0gym.R;
 import com.example.tp0gym.utils.AppPreferences;
+import com.example.tp0gym.utils.BiometricHelper;
 
 import javax.inject.Inject;
 
@@ -27,13 +27,10 @@ public class SplashFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(
-            @NonNull LayoutInflater inflater,
-            @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState
-    ) {
-        // Layout simple/blank. Podés usar un ProgressBar si querés.
-        return new View(requireContext());
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return new View(requireContext()); // Splash vacío
     }
 
     @Override
@@ -44,29 +41,37 @@ public class SplashFragment extends Fragment {
 
     private void decideDestination() {
         String token = prefs.getToken();
-
         NavController nav = NavHostFragment.findNavController(this);
 
-        // Opciones para limpiar el back stack del splash
-        NavOptions clearBackStackToSplash = new NavOptions.Builder()
-                .setPopUpTo(R.id.splashFragment, true)
-                .build();
-
         if (isTokenValid(token)) {
-            // Ir a Home y sacar el splash del back stack
-            nav.navigate(R.id.action_login_to_home, null, clearBackStackToSplash);
+            if (prefs.hasLoggedInOnce()) {
+                // Ya inició sesión antes → pedir biométrica inmediatamente
+                BiometricHelper.tryBiometric(
+                        requireActivity(),
+                        this::goToClases,  // éxito → ClasesFragment
+                        this::goToLogin    // cancelar/fallo → LoginFragment
+                );
+            } else {
+                // Primer login → ir a login
+                nav.navigate(R.id.loginFragment);
+            }
         } else {
-            // Ir a Login y sacar el splash del back stack
-            nav.navigate(R.id.action_splash_to_login, null, clearBackStackToSplash);
+            // Token inválido → login
+            nav.navigate(R.id.loginFragment);
         }
     }
 
-    // “Válido” mínimo: existe. Si querés, validá exp de JWT.
-    private boolean isTokenValid(String token) {
-        if (token == null || token.trim().isEmpty()) return false;
+    private void goToClases() {
+        NavController nav = NavHostFragment.findNavController(this);
+        nav.navigate(R.id.clasesFragment);
+    }
 
-        // Opcional: validar expiración leyendo el payload del JWT (sin red)
-        // o ping rápido al backend para refresh/validación.
-        return true;
+    private void goToLogin() {
+        NavController nav = NavHostFragment.findNavController(this);
+        nav.navigate(R.id.loginFragment);
+    }
+
+    private boolean isTokenValid(String token) {
+        return token != null && !token.trim().isEmpty();
     }
 }

@@ -1,5 +1,7 @@
 package com.example.tp0gym.ui.screens;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,8 +18,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
-// Jetpack Navigation
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.tp0gym.R;
@@ -38,7 +38,7 @@ public class LoginFragment extends Fragment {
 
     @Inject
     AuthRepository authRepository;
-    AppPreferences prefs;
+    private AppPreferences prefs;
 
     private CustomTextField emailField, passwordField;
     private ImageView togglePassword;
@@ -51,7 +51,8 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Inicializamos el wrapper de SharedPreferences
+        SharedPreferences sp = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+        prefs = new AppPreferences(sp);
     }
 
     @Nullable
@@ -62,26 +63,15 @@ public class LoginFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_welcome, container, false);
 
+        // Bind de vistas
         emailField     = view.findViewById(R.id.emailField);
         passwordField  = view.findViewById(R.id.passwordField);
         togglePassword = view.findViewById(R.id.togglePassword);
         loginButton    = view.findViewById(R.id.loginButton);
         otpButton      = view.findViewById(R.id.otpButton);
 
-        // Estética básica
-        emailField.setTextColor(Color.WHITE);
-        emailField.setHintTextColor(Color.WHITE);
-        passwordField.setTextColor(Color.WHITE);
-        passwordField.setHintTextColor(Color.WHITE);
-
         // Password oculto por defecto
         passwordField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        passwordField.setSelection(passwordField.getText().length());
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            emailField.setTextCursorDrawable(null);
-            passwordField.setTextCursorDrawable(null);
-        }
 
         // Toggle mostrar/ocultar contraseña
         togglePassword.setOnClickListener(v -> {
@@ -102,20 +92,8 @@ public class LoginFragment extends Fragment {
             String email    = emailField.getText().toString().trim();
             String password = passwordField.getText().toString().trim();
 
-            if (TextUtils.isEmpty(email) && TextUtils.isEmpty(password)) {
-                Toast.makeText(getContext(), "Por favor complete los campos", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (TextUtils.isEmpty(email)) {
-                Toast.makeText(getContext(), "Por favor ingrese su email", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (!email.contains("@")) {
-                Toast.makeText(getContext(), "Email inválido", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (TextUtils.isEmpty(password)) {
-                Toast.makeText(getContext(), "Por favor ingrese su contraseña", Toast.LENGTH_SHORT).show();
+            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                Toast.makeText(getContext(), "Complete todos los campos", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -125,17 +103,16 @@ public class LoginFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null) {
                         User user = response.body();
 
-                        // Guardamos token y flag
+                        // Guardamos token y flags
                         prefs.setToken(user.getAccessToken());
                         prefs.setHasLoggedInOnce(true);
+                        prefs.setPermissionsAsked(true); // 👈 importante
 
                         Toast.makeText(getContext(), "Login exitoso", Toast.LENGTH_SHORT).show();
 
-                        // ✅ Navegar al Home usando Navigation Component (acción definida en nav_graph)
+                        // Navegación al Home
                         NavHostFragment.findNavController(LoginFragment.this)
                                 .navigate(R.id.action_login_to_home);
-                        // Si no tuvieras action, podrías usar directamente el destino:
-                        // .navigate(R.id.clasesFragment);
                     } else {
                         Toast.makeText(getContext(), "Credenciales inválidas", Toast.LENGTH_SHORT).show();
                     }
@@ -148,13 +125,10 @@ public class LoginFragment extends Fragment {
             });
         });
 
-        // Click para ir al flujo de OTP/Email
+        // Click para OTP/Email
         otpButton.setOnClickListener(v -> {
-            // ✅ Navegación al destino del email (definí una acción en el nav_graph: action_login_to_email)
             NavHostFragment.findNavController(LoginFragment.this)
                     .navigate(R.id.action_login_to_email);
-            // Si no tenés esa action, podés navegar por id de fragment directamente:
-            // .navigate(R.id.emailLoginFragment);
         });
 
         return view;

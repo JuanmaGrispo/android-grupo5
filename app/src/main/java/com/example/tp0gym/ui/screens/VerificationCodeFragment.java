@@ -127,7 +127,7 @@ public class VerificationCodeFragment extends Fragment {
 
                     Toast.makeText(getContext(), "Código correcto, sesión iniciada", Toast.LENGTH_SHORT).show();
 
-                    // 👇 Navegación con Navigation Component
+                    // Navegación con Navigation Component
                     NavController nav = NavHostFragment.findNavController(VerificationCodeFragment.this);
                     nav.navigate(R.id.action_login_to_home);
                 } else {
@@ -143,7 +143,8 @@ public class VerificationCodeFragment extends Fragment {
     }
 
     private void resendOtp() {
-        authRepository.startLogin(email, new Callback<OtpResponse>() {
+        // ✅ Cambiado startLogin -> startLoginOtp
+        authRepository.startLoginOtp(email, null, new Callback<OtpResponse>() {
             @Override
             public void onResponse(Call<OtpResponse> call, Response<OtpResponse> response) {
                 if (response.isSuccessful() && response.body() != null && getContext() != null) {
