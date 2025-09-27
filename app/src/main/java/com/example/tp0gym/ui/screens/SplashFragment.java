@@ -1,6 +1,6 @@
-// SplashFragment.java
 package com.example.tp0gym.ui.screens;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,14 +16,9 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.utils.AppPreferences;
 import com.example.tp0gym.utils.BiometricHelper;
 
-import javax.inject.Inject;
-
-import dagger.hilt.android.AndroidEntryPoint;
-
-@AndroidEntryPoint
 public class SplashFragment extends Fragment {
 
-    @Inject AppPreferences prefs;
+    private AppPreferences prefs;
 
     @Nullable
     @Override
@@ -36,39 +31,48 @@ public class SplashFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        decideDestination();
+
+        // Inicializamos prefs aquí
+        SharedPreferences sp = requireContext().getSharedPreferences("app_prefs", getContext().MODE_PRIVATE);
+        prefs = new AppPreferences(sp);
+
+        // Posponemos la decisión al hilo de UI para asegurar que el fragment esté agregado
+        requireView().post(this::decideDestination);
     }
 
     private void decideDestination() {
         String token = prefs.getToken();
         NavController nav = NavHostFragment.findNavController(this);
 
-        if (isTokenValid(token)) {
-            if (prefs.hasLoggedInOnce()) {
-                // Ya inició sesión antes → pedir biométrica inmediatamente
-                BiometricHelper.tryBiometric(
-                        requireActivity(),
-                        this::goToClases,  // éxito → ClasesFragment
-                        this::goToLogin    // cancelar/fallo → LoginFragment
-                );
-            } else {
-                // Primer login → ir a login
+        if (isTokenValid(token) && prefs.hasLoggedInOnce()) {
+            // Segunda vez → biometría
+            BiometricHelper.tryBiometric(
+                    requireActivity(),
+                    this::goToClases, // éxito → ClasesFragment
+                    this::goToLogin   // cancelar/fallo → LoginFragment
+            );
+        } else {
+            // Primera vez o token inválido → login
+            if (isAdded()) {
                 nav.navigate(R.id.loginFragment);
             }
-        } else {
-            // Token inválido → login
-            nav.navigate(R.id.loginFragment);
         }
     }
 
     private void goToClases() {
-        NavController nav = NavHostFragment.findNavController(this);
-        nav.navigate(R.id.clasesFragment);
+        if (!isAdded()) return;
+        requireView().post(() -> {
+            NavController nav = NavHostFragment.findNavController(this);
+            nav.navigate(R.id.clasesFragment);
+        });
     }
 
     private void goToLogin() {
-        NavController nav = NavHostFragment.findNavController(this);
-        nav.navigate(R.id.loginFragment);
+        if (!isAdded()) return;
+        requireView().post(() -> {
+            NavController nav = NavHostFragment.findNavController(this);
+            nav.navigate(R.id.loginFragment);
+        });
     }
 
     private boolean isTokenValid(String token) {
