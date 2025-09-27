@@ -11,6 +11,7 @@ public class BiometricHelper {
 
     public static void tryBiometric(FragmentActivity activity, Runnable onSuccess, Runnable onCancel) {
         Executor executor = ContextCompat.getMainExecutor(activity);
+
         BiometricPrompt biometricPrompt = new BiometricPrompt(
                 activity,
                 executor,
@@ -19,14 +20,7 @@ public class BiometricHelper {
                     public void onAuthenticationError(int errorCode, CharSequence errString) {
                         super.onAuthenticationError(errorCode, errString);
                         Toast.makeText(activity, "Error biométrico: " + errString, Toast.LENGTH_SHORT).show();
-
-
-                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
-                                errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                            onCancel.run();
-                        } else {
-                            onCancel.run();
-                        }
+                        onCancel.run();
                     }
 
                     @Override
@@ -38,6 +32,7 @@ public class BiometricHelper {
                     @Override
                     public void onAuthenticationFailed() {
                         super.onAuthenticationFailed();
+                        Toast.makeText(activity, "Biometría no reconocida", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
@@ -49,8 +44,9 @@ public class BiometricHelper {
                 .build();
 
         BiometricManager biometricManager = BiometricManager.from(activity);
-        if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
-                BiometricManager.BIOMETRIC_SUCCESS) {
+        int canAuthenticate = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+
+        if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
             biometricPrompt.authenticate(promptInfo);
         } else {
             Toast.makeText(activity, "Biometría no disponible", Toast.LENGTH_SHORT).show();

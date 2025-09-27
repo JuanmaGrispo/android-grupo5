@@ -6,6 +6,9 @@ import com.example.tp0gym.modelo.OtpVerifyRequest;
 import com.example.tp0gym.modelo.OtpResponse;
 import com.example.tp0gym.modelo.User;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import retrofit2.Callback;
@@ -14,24 +17,19 @@ public class AuthRepository {
 
     private final AuthApiService authService;
 
-
     @Inject
     public AuthRepository(AuthApiService authService) {
         this.authService = authService;
     }
 
-    public void startRegister(String email, Callback<OtpResponse> callback) {
-        OtpRequest request = new OtpRequest(email);
-        authService.startRegister(request).enqueue(callback);
-    }
-
-    public void verifyRegister(String email, String code, Callback<User> callback) {
-        OtpVerifyRequest request = new OtpVerifyRequest(email, code);
-        authService.verifyRegister(request).enqueue(callback);
-    }
-
-    public void startLogin(String email, Callback<OtpResponse> callback) {
-        OtpRequest request = new OtpRequest(email);
+    // Para login OTP (usuarios existentes o registro)
+    public void startLoginOtp(String email, String password, Callback<OtpResponse> callback) {
+        Map<String, String> request = new HashMap<>();
+        request.put("email", email);
+        if (password != null && !password.isEmpty()) {
+            request.put("password", password); // opcional para usuarios que no tienen password
+        }
+        request.put("mode", "otp"); // obligatorio para que el backend sepa que es OTP
         authService.startLogin(request).enqueue(callback);
     }
 

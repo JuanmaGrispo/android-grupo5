@@ -13,6 +13,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -74,6 +76,16 @@ public class ClasesFragment extends Fragment {
         cargarClases(null, null, null);
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Mostrar PermissionsFragment solo la primera vez
+        if (!prefs.getPermissionsAsked()) {
+            NavController nav = NavHostFragment.findNavController(this);
+            nav.navigate(R.id.action_clases_to_permissions);
+        }
     }
 
     private void setupSpinners() {

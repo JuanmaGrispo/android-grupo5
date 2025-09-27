@@ -28,7 +28,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class PermissionsFragment extends Fragment {
 
     @Inject AppPreferences prefs;
-
     private ActivityResultLauncher<String[]> permissionLauncher;
 
     public PermissionsFragment() {}
@@ -49,9 +48,9 @@ public class PermissionsFragment extends Fragment {
         permissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
-                    // Marcar que ya pedimos permisos (sin importar si aceptó o no)
+                    // Marcar que ya pedimos permisos
                     prefs.setPermissionsAsked(true);
-                    goToHome();
+                    goToClases();
                 }
         );
 
@@ -60,12 +59,10 @@ public class PermissionsFragment extends Fragment {
     }
 
     private void requestPermissionsIfNeeded() {
-        boolean alreadyAsked = prefs.getPermissionsAsked();
-        if (!alreadyAsked) {
+        if (!prefs.getPermissionsAsked()) {
             launchPermissions();
         } else {
-            // Ya los pedimos alguna vez — seguir con el flujo
-            goToHome();
+            goToClases();
         }
     }
 
@@ -82,11 +79,8 @@ public class PermissionsFragment extends Fragment {
         }
     }
 
-    private void goToHome() {
-        NavController nav = NavHostFragment.findNavController(PermissionsFragment.this);
-        // Si definiste una acción en el nav_graph, usá esa acción.
-        // nav.navigate(R.id.action_permissionsFragment_to_clasesFragment);
-        // Si no tenés acción, navegar directo al destino también funciona:
+    private void goToClases() {
+        NavController nav = NavHostFragment.findNavController(this);
         nav.navigate(R.id.clasesFragment);
     }
 }

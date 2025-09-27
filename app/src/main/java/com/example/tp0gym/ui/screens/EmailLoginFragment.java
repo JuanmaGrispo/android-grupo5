@@ -56,14 +56,13 @@ public class EmailLoginFragment extends Fragment {
         nextButton = view.findViewById(R.id.nextButton);
         backButton = view.findViewById(R.id.backButton);
 
-        // Estilos mínimos que ya tenías
+        // Estilos mínimos
         emailField.setTextColor(Color.WHITE);
         emailField.setHintTextColor(Color.WHITE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             emailField.setTextCursorDrawable(null);
         }
 
-        // NavController (Navigation Component)
         NavController nav = NavHostFragment.findNavController(this);
 
         nextButton.setOnClickListener(v -> {
@@ -78,7 +77,8 @@ public class EmailLoginFragment extends Fragment {
                 return;
             }
 
-            authRepository.startLogin(email, new Callback<OtpResponse>() {
+            // Llamada correcta al repository usando OTP
+            authRepository.startLoginOtp(email, null, new Callback<OtpResponse>() {
                 @Override
                 public void onResponse(Call<OtpResponse> call, Response<OtpResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
@@ -97,7 +97,6 @@ public class EmailLoginFragment extends Fragment {
                             // Navegar a Verification pasando el email
                             Bundle args = new Bundle();
                             args.putString("email", email);
-                            // Ajustá el ID si tu destino se llama distinto
                             nav.navigate(R.id.verificationCodeFragment, args);
 
                         } else {
@@ -116,10 +115,8 @@ public class EmailLoginFragment extends Fragment {
         });
 
         backButton.setOnClickListener(v -> {
-            // Volver en el back stack de Navigation Component
             if (!nav.navigateUp()) {
-                // Si no hay a dónde volver, podés navegar explícito al destino “welcome/login”
-                // nav.navigate(R.id.loginFragment); // descomentá si querés forzar
+                // Si no hay a dónde volver, opcionalmente navegar a login
             }
         });
 
