@@ -1,6 +1,5 @@
 package com.example.tp0gym.ui.screens;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +15,15 @@ import com.example.tp0gym.R;
 import com.example.tp0gym.utils.AppPreferences;
 import com.example.tp0gym.utils.BiometricHelper;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class SplashFragment extends Fragment {
 
-    private AppPreferences prefs;
+    @Inject
+    AppPreferences prefs;
 
     @Nullable
     @Override
@@ -31,10 +36,6 @@ public class SplashFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        // Inicializamos prefs aquí
-        SharedPreferences sp = requireContext().getSharedPreferences("app_prefs", getContext().MODE_PRIVATE);
-        prefs = new AppPreferences(sp);
 
         // Posponemos la decisión al hilo de UI para asegurar que el fragment esté agregado
         requireView().post(this::decideDestination);

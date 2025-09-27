@@ -117,6 +117,7 @@ public class ProfileFragment extends Fragment {
 
     private void loadProfile() {
         final String token = appPrefs.getToken(); // leer token por Hilt (AppPreferences)
+
         if (token == null || token.isEmpty()) {
             Toast.makeText(requireContext(), "Sesión no iniciada. Iniciá sesión.", Toast.LENGTH_SHORT).show();
             NavHostFragment.findNavController(ProfileFragment.this).navigate(R.id.loginFragment);

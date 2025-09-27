@@ -33,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             if (destination.getId() == R.id.clasesFragment
                     || destination.getId() == R.id.reservationFragment
-                    || destination.getId() == R.id.profileFragment) {
+                    || destination.getId() == R.id.profileFragment
+                    || destination.getId() == R.id.historyFragment) {
                 bottomNav.setVisibility(android.view.View.VISIBLE);
             } else {
                 bottomNav.setVisibility(android.view.View.GONE);

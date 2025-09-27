@@ -7,7 +7,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,7 +39,6 @@ import retrofit2.Response;
 public class HistoryFragment extends Fragment {
 
     private LinearLayout cardsContainer;
-    private Button backButton;
 
     @Inject AttendanceRepository repo;
     @Inject AppPreferences appPrefs;
@@ -60,11 +58,6 @@ public class HistoryFragment extends Fragment {
         super.onViewCreated(root, savedInstanceState);
 
         cardsContainer = root.findViewById(R.id.cardsContainer);
-        backButton     = root.findViewById(R.id.backButton);
-
-        backButton.setOnClickListener(v ->
-                NavHostFragment.findNavController(HistoryFragment.this).navigateUp()
-        );
 
         loadHistory();
     }
@@ -76,7 +69,7 @@ public class HistoryFragment extends Fragment {
         final String token = appPrefs.getToken();
         if (token == null || token.isEmpty()) {
             Toast.makeText(requireContext(), "Sesión no iniciada. Iniciá sesión.", Toast.LENGTH_SHORT).show();
-            NavHostFragment.findNavController(this).navigate(R.id.loginFragment);
+            renderError("Sesión no iniciada. Iniciá sesión.");
             return;
         }
 
@@ -91,7 +84,7 @@ public class HistoryFragment extends Fragment {
                     renderFromDto(resp.body());
                 } else if (resp.code() == 401) {
                     Toast.makeText(requireContext(), "Sesión expirada. Iniciá sesión de nuevo.", Toast.LENGTH_SHORT).show();
-                    NavHostFragment.findNavController(HistoryFragment.this).navigate(R.id.loginFragment);
+                    renderError("Sesión expirada. Iniciá sesión de nuevo.");
                 } else {
                     renderError("No se pudo cargar el historial (" + resp.code() + ")");
                 }
