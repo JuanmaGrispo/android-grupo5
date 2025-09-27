@@ -40,8 +40,7 @@ public interface AuthApiService {
     Call<User> login(@Body LoginRequest request);
 
     // 👇 NUEVO: historial de asistencias
-    // Si tu baseUrl YA incluye /api/v1/ → "me/attendance"
-    // Si NO lo incluye → "api/v1/me/attendance"
-    @GET("me/attendance")
+    // Endpoint correcto según documentación: /api/v1/attendance/me
+    @GET("attendance/me")
     Call<List<AttendanceDto>> getMyAttendance(@Header("Authorization") String bearerToken);
 }

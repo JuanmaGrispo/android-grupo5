@@ -17,7 +17,7 @@ import dagger.hilt.components.SingletonComponent;
 @InstallIn(SingletonComponent.class)
 public class AppModule {
 
-    private static final String PREFS_NAME = "APP_PREFS";
+    private static final String PREFS_NAME = "app_prefs";
 
     @Provides @Singleton
     public SharedPreferences provideSharedPrefs(@ApplicationContext Context ctx) {

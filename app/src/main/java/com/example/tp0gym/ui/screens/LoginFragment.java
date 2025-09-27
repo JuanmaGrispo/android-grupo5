@@ -38,7 +38,9 @@ public class LoginFragment extends Fragment {
 
     @Inject
     AuthRepository authRepository;
-    private AppPreferences prefs;
+    
+    @Inject
+    AppPreferences prefs;
 
     private CustomTextField emailField, passwordField;
     private ImageView togglePassword;
@@ -51,8 +53,6 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences sp = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-        prefs = new AppPreferences(sp);
     }
 
     @Nullable

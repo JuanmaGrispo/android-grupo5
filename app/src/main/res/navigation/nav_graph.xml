@@ -42,6 +42,9 @@
         <action
             android:id="@+id/action_clases_to_profile"
             app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_clases_to_history"
+            app:destination="@id/historyFragment" />
     </fragment>
 
     <fragment
