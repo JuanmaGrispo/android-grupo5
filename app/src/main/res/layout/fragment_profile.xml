@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -22,7 +23,7 @@
         android:textColor="@color/yellow"
         android:textSize="42sp" />
 
-    <!-- Subtítulo opcional -->
+    <!-- Subtítulo -->
     <TextView
         android:id="@+id/tvSubtitle"
         android:layout_width="wrap_content"
@@ -33,19 +34,38 @@
         android:layout_gravity="center_horizontal"
         android:paddingBottom="24dp" />
 
-    <!-- Campo Nombre -->
-    <com.example.tp0gym.ui.components.CustomTextField
-        android:id="@+id/nameField"
+    <!-- Fila: Nombre + botón Editar -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:orientation="horizontal"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="16dp"
-        android:hint="Nombre"
-        android:inputType="textPersonName"
-        android:textColor="@android:color/white"
-        android:textColorHint="@android:color/white"
-        android:textSize="18sp"
-        android:background="@drawable/rounded_border_dark" />
+        android:layout_marginBottom="16dp">
+
+        <com.example.tp0gym.ui.components.CustomTextField
+            android:id="@+id/nameField"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:hint="Nombre"
+            android:inputType="textPersonName"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white"
+            android:textSize="18sp"
+            android:background="@drawable/rounded_border_dark"
+            android:enabled="false" />
+
+        <ImageButton
+            android:id="@+id/editButton"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Editar"
+            android:src="@drawable/ic_edit_24"
+            app:tint="@color/yellow" />
+    </LinearLayout>
 
     <!-- Campo Email -->
     <com.example.tp0gym.ui.components.CustomTextField
@@ -55,12 +75,69 @@
         android:layout_marginBottom="22dp"
         android:hint="Email"
         android:inputType="textEmailAddress"
+        android:enabled="false"
+        android:focusable="false"
         android:textColor="@android:color/white"
         android:textColorHint="@android:color/white"
         android:textSize="18sp"
         android:background="@drawable/rounded_border_dark" />
 
-    <!-- Botón Guardar -->
+    <!-- Formulario oculto de edición del nombre -->
+    <LinearLayout
+        android:id="@+id/editNameContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:background="@drawable/rounded_border_dark"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Editar nombre"
+            android:textColor="@color/yellow"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nuevo nombre"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/darker_gray"
+            android:background="@drawable/rounded_border_dark"
+            android:padding="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="12dp">
+
+            <Button
+                android:id="@+id/cancelEditBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancelar"
+                android:backgroundTint="@color/gray"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/confirmEditBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Guardar"
+                android:layout_marginStart="12dp"
+                android:backgroundTint="@color/yellow"
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Botón Guardar (opcional, se puede dejar para email u otros campos) -->
     <Button
         android:id="@+id/saveButton"
         android:layout_width="match_parent"
@@ -70,7 +147,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="12dp"
         android:background="@drawable/rounded_button"
-        android:backgroundTint="@color/yellow" />
+        android:backgroundTint="@color/yellow"
+        android:visibility="gone" />
 
     <!-- Botón Volver -->
     <Button
