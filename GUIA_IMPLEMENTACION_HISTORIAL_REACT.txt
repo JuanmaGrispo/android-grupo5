@@ -1,0 +1,654 @@
+================================================================================
+GUÍA DE IMPLEMENTACIÓN: HISTORIAL DE ASISTENCIAS EN REACT
+================================================================================
+
+Este documento describe cómo implementar la funcionalidad de historial de 
+asistencias en una aplicación React, basándose en la implementación existente 
+en Android (HistoryFragment.java).
+
+================================================================================
+1. ESTRUCTURA DE DATOS Y MODELOS
+================================================================================
+
+1.1. Modelo AttendanceDto (TypeScript/JavaScript)
+--------------------------------------------------
+Crear interfaces TypeScript que reflejen la estructura de datos del backend:
+
+interface AttendanceDto {
+  id: string;
+  createdAt: string;
+  user: UserDto;
+  session: SessionDto;
+}
+
+interface SessionDto {
+  id: string;
+  startAt: string;  // ISO-8601: "2025-09-27T11:30:00.000Z"
+  durationMin: number;
+  capacity: number;
+  reservedCount: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  classRef: ClassRefDto;
+}
+
+interface ClassRefDto {
+  id: string;
+  title: string;
+  description: string;
+  discipline: string;
+  defaultDurationMin: number;
+  defaultCapacity: number;
+  instructorName: string;
+  locationName: string;
+  locationAddress: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface UserDto {
+  id: string;
+  email: string;
+  // ... otros campos según tu modelo
+}
+
+================================================================================
+2. SERVICIO API / REPOSITORIO
+================================================================================
+
+2.1. Crear servicio de API para obtener el historial
+------------------------------------------------------
+Crear un archivo de servicio (ej: attendanceService.ts o api/attendance.ts):
+
+import axios from 'axios'; // o fetch, o tu cliente HTTP preferido
+
+const API_BASE_URL = 'https://tu-api.com/api/v1'; // Ajustar según tu backend
+
+export const attendanceService = {
+  /**
+   * Obtiene el historial de asistencias del usuario autenticado
+   * @param token - Token de autenticación JWT
+   * @returns Promise con lista de AttendanceDto
+   */
+  getMyAttendance: async (token: string): Promise<AttendanceDto[]> => {
+    const response = await axios.get(`${API_BASE_URL}/attendance/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  }
+};
+
+NOTA: El endpoint es: GET /api/v1/attendance/me
+      Requiere header: Authorization: Bearer {token}
+
+================================================================================
+3. COMPONENTE REACT: HistoryPage / HistoryComponent
+================================================================================
+
+3.1. Estructura del componente
+-------------------------------
+Crear un componente funcional con React Hooks:
+
+import React, { useState, useEffect } from 'react';
+import { attendanceService } from '../services/attendanceService';
+import { useAuth } from '../hooks/useAuth'; // o tu sistema de autenticación
+
+const HistoryPage: React.FC = () => {
+  // Estados
+  const [attendanceData, setAttendanceData] = useState<AttendanceDto[]>([]);
+  const [filteredData, setFilteredData] = useState<AttendanceDto[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Estados para filtros de fecha
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [isFilterActive, setIsFilterActive] = useState<boolean>(false);
+
+  // Obtener token de autenticación (ajustar según tu sistema)
+  const { token } = useAuth();
+
+  // Cargar historial al montar el componente
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  // Función para cargar el historial
+  const loadHistory = async () => {
+    if (!token) {
+      setError('Sesión no iniciada. Iniciá sesión.');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await attendanceService.getMyAttendance(token);
+      setAttendanceData(data);
+      setFilteredData(data);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setError('Sesión expirada. Iniciá sesión de nuevo.');
+      } else {
+        setError(`No se pudo cargar el historial: ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ... resto de funciones (ver secciones siguientes)
+};
+
+================================================================================
+4. FUNCIONALIDAD DE FILTRADO POR FECHAS
+================================================================================
+
+4.1. Selectores de fecha
+------------------------
+Implementar date pickers (puedes usar librerías como react-datepicker, 
+@mui/x-date-pickers, o input type="date"):
+
+import DatePicker from 'react-datepicker'; // ejemplo con react-datepicker
+import 'react-datepicker/dist/react-datepicker.css';
+
+// En el JSX:
+<div className="date-filters">
+  <div>
+    <label>Desde</label>
+    <DatePicker
+      selected={startDate}
+      onChange={(date: Date) => setStartDate(date)}
+      maxDate={new Date()} // No permitir fechas futuras
+      dateFormat="dd/MM/yyyy"
+      placeholderText="Seleccionar fecha"
+    />
+  </div>
+  
+  <div>
+    <label>Hasta</label>
+    <DatePicker
+      selected={endDate}
+      onChange={(date: Date) => setEndDate(date)}
+      maxDate={new Date()}
+      dateFormat="dd/MM/yyyy"
+      placeholderText="Seleccionar fecha"
+    />
+  </div>
+</div>
+
+4.2. Función para aplicar filtro
+----------------------------------
+const applyDateFilter = () => {
+  if (!startDate || !endDate) return;
+  if (startDate > endDate) {
+    alert('La fecha de inicio debe ser anterior a la fecha de fin');
+    return;
+  }
+
+  setIsFilterActive(true);
+  const filtered = filterByDateRange(attendanceData, startDate, endDate);
+  setFilteredData(filtered);
+};
+
+4.3. Función para limpiar filtro
+---------------------------------
+const clearDateFilter = () => {
+  setIsFilterActive(false);
+  setStartDate(null);
+  setEndDate(null);
+  setFilteredData(attendanceData);
+};
+
+4.4. Función de filtrado
+------------------------
+const filterByDateRange = (
+  data: AttendanceDto[], 
+  start: Date, 
+  end: Date
+): AttendanceDto[] => {
+  return data.filter(dto => {
+    if (!dto.session?.startAt) return false;
+    
+    const sessionDate = parseDate(dto.session.startAt);
+    if (!sessionDate) return false;
+    
+    // Comparar solo las fechas (sin hora)
+    const sessionDateOnly = new Date(
+      sessionDate.getFullYear(),
+      sessionDate.getMonth(),
+      sessionDate.getDate()
+    );
+    const startOnly = new Date(
+      start.getFullYear(),
+      start.getMonth(),
+      start.getDate()
+    );
+    const endOnly = new Date(
+      end.getFullYear(),
+      end.getMonth(),
+      end.getDate()
+    );
+    
+    return sessionDateOnly >= startOnly && sessionDateOnly <= endOnly;
+  });
+};
+
+4.5. Función para parsear fechas ISO
+-------------------------------------
+const parseDate = (dateString: string): Date | null => {
+  try {
+    // Formato esperado: "2025-09-27T11:30:00.000Z"
+    return new Date(dateString);
+  } catch (e) {
+    return null;
+  }
+};
+
+4.6. Validación del botón "Aplicar Filtro"
+-------------------------------------------
+const canApplyFilter = startDate !== null && 
+                       endDate !== null && 
+                       startDate <= endDate;
+
+<button 
+  onClick={applyDateFilter}
+  disabled={!canApplyFilter}
+>
+  Aplicar Filtro
+</button>
+
+<button onClick={clearDateFilter}>
+  Limpiar
+</button>
+
+================================================================================
+5. RENDERIZADO DE TARJETAS (CARDS)
+================================================================================
+
+5.1. Transformar datos a formato UI
+------------------------------------
+Crear una función que transforme AttendanceDto[] a items renderizables:
+
+interface HistoryItem {
+  title: string;
+  subtitle: string;
+  locationName: string;
+  durationMin: number;
+  attended: boolean;
+}
+
+const transformToHistoryItems = (data: AttendanceDto[]): HistoryItem[] => {
+  return data
+    .filter(dto => dto.session !== null)
+    .map(dto => {
+      const session = dto.session!;
+      const classRef = session.classRef;
+      
+      const title = classRef?.title || 'Clase';
+      const dateUi = formatDateForUI(session.startAt);
+      const teacher = classRef?.instructorName || '';
+      const locationName = classRef?.locationName || '';
+      const durationMin = session.durationMin || 0;
+      
+      // Este endpoint representa asistencias efectivas -> siempre "Asistida"
+      const attended = true;
+      
+      const subtitle = `${dateUi}${durationMin > 0 ? ` • ${durationMin} min` : ''}`;
+      
+      return {
+        title,
+        subtitle,
+        locationName,
+        durationMin,
+        attended
+      };
+    });
+};
+
+5.2. Función para formatear fechas
+-----------------------------------
+const formatDateForUI = (isoDate: string): string => {
+  if (!isoDate) return '';
+  
+  try {
+    const date = new Date(isoDate);
+    // Formato: "dd/MM - HH:mm hs"
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${day}/${month} - ${hours}:${minutes} hs`;
+  } catch (e) {
+    return isoDate;
+  }
+};
+
+5.3. Componente de tarjeta
+---------------------------
+Crear un componente HistoryCard:
+
+interface HistoryCardProps {
+  item: HistoryItem;
+}
+
+const HistoryCard: React.FC<HistoryCardProps> = ({ item }) => {
+  return (
+    <div className="history-card">
+      <div className="history-card-content">
+        <h3 className="history-card-title">{item.title}</h3>
+        <p className="history-card-subtitle">{item.subtitle}</p>
+        
+        {item.locationName && (
+          <p className="history-card-location">{item.locationName}</p>
+        )}
+        
+        {item.durationMin > 0 && (
+          <p className="history-card-duration">{item.durationMin} min</p>
+        )}
+      </div>
+      
+      <div className="history-card-badge">
+        <span className={`badge ${item.attended ? 'badge-attended' : 'badge-absent'}`}>
+          {item.attended ? 'Asistida' : 'Ausente'}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+5.4. Renderizado condicional
+-----------------------------
+En el componente principal:
+
+const items = transformToHistoryItems(filteredData);
+
+if (loading) {
+  return <div className="loading">Cargando historial...</div>;
+}
+
+if (error) {
+  return <div className="error">{error}</div>;
+}
+
+if (items.length === 0) {
+  return <div className="empty">Sin historial por ahora.</div>;
+}
+
+return (
+  <div className="history-page">
+    {/* Filtros de fecha */}
+    <div className="date-filters-section">
+      {/* ... selectores de fecha y botones ... */}
+      
+      {/* Información del filtro activo */}
+      {isFilterActive && (
+        <div className="filter-info">
+          <span>Mostrando: {items.length} actividades</span>
+          <span>
+            {formatDateRange(startDate!, endDate!)}
+          </span>
+        </div>
+      )}
+    </div>
+    
+    {/* Lista de tarjetas */}
+    <div className="history-cards-container">
+      {items.map((item, index) => (
+        <HistoryCard key={index} item={item} />
+      ))}
+    </div>
+  </div>
+);
+
+5.5. Función para formatear rango de fechas
+--------------------------------------------
+const formatDateRange = (start: Date, end: Date): string => {
+  const formatDate = (date: Date) => {
+    const day = date.getDate();
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month}${date === end ? ` ${year}` : ''}`;
+  };
+  
+  return `${formatDate(start)} - ${formatDate(end)}`;
+};
+
+================================================================================
+6. ESTILOS CSS
+================================================================================
+
+6.1. Estilos básicos para las tarjetas
+---------------------------------------
+Crear un archivo CSS o usar styled-components/Tailwind:
+
+.history-page {
+  padding: 16px;
+  background-color: #000; /* o tu color de fondo */
+  min-height: 100vh;
+}
+
+.date-filters-section {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.date-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.date-filters > div {
+  flex: 1;
+}
+
+.filter-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.history-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+}
+
+.history-card-content {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.history-card-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+}
+
+.history-card-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  margin: 0 0 2px 0;
+}
+
+.history-card-location,
+.history-card-duration {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin: 2px 0;
+}
+
+.history-card-badge {
+  display: flex;
+  align-items: center;
+}
+
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.badge-attended {
+  background-color: #FFD700; /* amarillo */
+  color: #000;
+}
+
+.badge-absent {
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid #666;
+}
+
+.loading,
+.error,
+.empty {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+  text-align: center;
+}
+
+================================================================================
+7. MANEJO DE ERRORES Y ESTADOS
+================================================================================
+
+7.1. Estados de carga
+---------------------
+- Mostrar "Cargando historial..." mientras se hace la petición
+- Ocultar el contenido hasta que los datos estén listos
+
+7.2. Manejo de errores
+----------------------
+- Error 401: "Sesión expirada. Iniciá sesión de nuevo."
+- Error de red: "Fallo de red: {mensaje}"
+- Otros errores: "No se pudo cargar el historial ({código})"
+
+7.3. Estado vacío
+-----------------
+- Mostrar "Sin historial por ahora." cuando no hay datos
+
+================================================================================
+8. INTEGRACIÓN CON RUTAS
+================================================================================
+
+8.1. Configurar ruta (ejemplo con React Router)
+-----------------------------------------------
+import { Route, Routes } from 'react-router-dom';
+import HistoryPage from './pages/HistoryPage';
+
+<Routes>
+  <Route path="/history" element={<HistoryPage />} />
+</Routes>
+
+8.2. Navegación
+---------------
+Desde cualquier componente:
+import { useNavigate } from 'react-router-dom';
+
+const navigate = useNavigate();
+navigate('/history');
+
+================================================================================
+9. CONSIDERACIONES ADICIONALES
+================================================================================
+
+9.1. Autenticación
+------------------
+- Asegurarse de que el token esté disponible antes de hacer la petición
+- Manejar la expiración del token (redirigir al login si es necesario)
+
+9.2. Optimizaciones
+--------------------
+- Considerar usar React.memo para HistoryCard si hay muchas tarjetas
+- Implementar paginación si el historial es muy grande
+- Usar useMemo para el filtrado si los datos son grandes
+
+9.3. Librerías recomendadas
+-----------------------------
+- react-datepicker: Para selectores de fecha
+- date-fns o dayjs: Para manipulación de fechas (alternativa a funciones nativas)
+- axios o fetch: Para peticiones HTTP
+- react-query o SWR: Para manejo de estado del servidor (opcional pero recomendado)
+
+9.4. Ejemplo con React Query (opcional)
+----------------------------------------
+import { useQuery } from 'react-query';
+
+const { data, isLoading, error } = useQuery(
+  'attendance-history',
+  () => attendanceService.getMyAttendance(token),
+  {
+    enabled: !!token,
+    retry: 1
+  }
+);
+
+================================================================================
+10. RESUMEN DE FUNCIONALIDADES IMPLEMENTADAS
+================================================================================
+
+✓ Carga del historial desde el endpoint GET /api/v1/attendance/me
+✓ Visualización de tarjetas con información de cada asistencia
+✓ Filtrado por rango de fechas (desde/hasta)
+✓ Botones para aplicar y limpiar filtros
+✓ Indicador de filtro activo con cantidad de resultados
+✓ Manejo de estados: loading, error, vacío
+✓ Formateo de fechas en formato legible (dd/MM - HH:mm hs)
+✓ Badge de estado "Asistida" en cada tarjeta
+✓ Validación de fechas (no permitir fechas futuras, validar rango)
+
+================================================================================
+11. ESTRUCTURA DE ARCHIVOS SUGERIDA
+================================================================================
+
+src/
+  components/
+    HistoryCard.tsx
+    DateFilter.tsx
+  pages/
+    HistoryPage.tsx
+  services/
+    attendanceService.ts
+  types/
+    attendance.ts (interfaces TypeScript)
+  hooks/
+    useAuth.ts (o tu sistema de autenticación)
+  styles/
+    HistoryPage.css (o usar CSS modules/styled-components)
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
